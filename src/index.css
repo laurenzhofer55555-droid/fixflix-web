@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #fdf7ee;
+  --color-wood: #8b5e3c;
+  --color-wood-dark: #5c3d26;
+  --color-brand: #f97316;
+  --color-brand-dark: #ea580c;
+}
+
+body {
+  @apply bg-cream text-wood-dark antialiased;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+}

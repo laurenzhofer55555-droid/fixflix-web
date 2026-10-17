@@ -1,0 +1,128 @@
+{
+  "common": {
+    "back": "Back",
+    "next": "Next",
+    "step": "Step {{current}} of {{total}}",
+    "error": "Something went wrong. Please try again in a moment.",
+    "emailInvalid": "Please enter a valid email address.",
+    "plzInvalid": "Please enter a valid postal code (5 digits)."
+  },
+  "brand": {
+    "tagline": "Everyday help from your neighbourhood"
+  },
+  "landing": {
+    "heroTitle": "Help for your home — fair, flexible, close by",
+    "heroSubtitle": "FixFlix connects people who need a hand around the house with talented helpers from the neighbourhood. Ask quick, fixed quick.",
+    "ctaSeekerTitle": "I need help",
+    "ctaSeekerText": "Assembling furniture, small repairs, painting, gardening — just tell us what needs doing.",
+    "ctaSeekerButton": "Find help",
+    "ctaHelperTitle": "I love getting things done",
+    "ctaHelperText": "Earn with your talent — flexibly, in your area, whenever it suits you.",
+    "ctaHelperButton": "Become a helper",
+    "howTitle": "How FixFlix works",
+    "how1Title": "Describe",
+    "how1Text": "Tell us what needs doing and where.",
+    "how2Title": "Connect",
+    "how2Text": "We find suitable helpers near you.",
+    "how3Title": "Get it done",
+    "how3Text": "You arrange the rest directly with each other.",
+    "legalNote": "FixFlix connects people for everyday help and simple tasks — not for licensed trade services."
+  },
+  "categories": {
+    "assemble": "Assembly & Mounting",
+    "repair": "Small repairs",
+    "mount": "Hanging & Fixing",
+    "paint": "Painting & Decorating",
+    "garden": "Garden & Outdoors",
+    "transport": "Moving & Transport",
+    "household": "Household & Tidying"
+  },
+  "seeker": {
+    "categoriesTitle": "What needs doing?",
+    "categoriesHint": "Pick one or more activities.",
+    "detailsTitle": "Tell us a little more",
+    "descriptionLabel": "What exactly needs doing? (optional)",
+    "descriptionPlaceholder": "e.g. Assemble a shelf and hang two pictures …",
+    "plzLabel": "Your postal code"
+  },
+  "helper": {
+    "categoriesTitle": "What can you help with?",
+    "categoriesHint": "Select everything you're good at.",
+    "detailsTitle": "Where, and how experienced are you?",
+    "plzLabel": "Your postal code",
+    "levelLabel": "Your experience",
+    "levelHobby": "Hobby — I help out occasionally",
+    "levelAdvanced": "Advanced — lots of practice",
+    "levelPro": "Pro — professional background"
+  },
+  "waitlist": {
+    "seekerTitle": "One more thing …",
+    "seekerText": "The FixFlix app is coming soon: find helpers near you, chat directly, see reviews — all in one place.",
+    "helperTitle": "Almost there!",
+    "helperText": "With the FixFlix app you'll soon see matching requests from your area in your feed — with chat and your own profile.",
+    "wantsAppQuestion": "Would you use the FixFlix app?",
+    "wantsAppYes": "Yes, I want it!",
+    "wantsAppNo": "Probably not",
+    "emailLabel": "Your email address",
+    "emailPlaceholder": "you@example.com",
+    "emailHint": "We'll get in touch as soon as FixFlix launches in your region.",
+    "consent": "I agree that my details may be stored so FixFlix can contact me. Details in the <privacy>privacy policy</privacy>.",
+    "submit": "Join the waitlist"
+  },
+  "success": {
+    "title": "You're on the list!",
+    "seekerText": "Thank you! We'll get in touch as soon as FixFlix launches in your region.",
+    "helperText": "Thank you! We'll let you know as soon as you can get started with FixFlix.",
+    "backHome": "Back to home"
+  },
+  "footer": {
+    "imprint": "Legal notice",
+    "privacy": "Privacy",
+    "note": "© 2026 FixFlix — MVP for market validation"
+  },
+  "legal": {
+    "imprintTitle": "Legal notice (Impressum)",
+    "privacyTitle": "Privacy policy",
+    "todo": "Details incomplete: enter your real operator data in src/config/site.ts before you publish the site.",
+    "imprintHeading": "Information pursuant to § 5 DDG (Germany)",
+    "contact": "Contact",
+    "emailLabel": "Email",
+    "phoneLabel": "Phone",
+    "privacy": {
+      "s1Title": "Controller",
+      "s1Body": "{{name}}, {{street}}, {{city}} · Email: {{email}}",
+      "s2Title": "Hosting (GitHub Pages)",
+      "s2Body": "This website is served via GitHub Pages (GitHub Inc., USA). When you visit, GitHub processes technically necessary connection data such as your IP address in server logs. The legal basis is our legitimate interest in a secure and stable service (Art. 6(1)(f) GDPR).",
+      "s3Title": "Waitlist",
+      "s3Body": "When you join the waitlist we store your email address, postal code, selected activities, optionally your description or experience level, your answer on whether you would use the app, your language, where your visit came from (e.g. the source of the link) and the time of sign-up. The purpose is to inform you about the launch of FixFlix and to evaluate demand for the product. The legal basis is your consent (Art. 6(1)(a) GDPR), which you can withdraw at any time.",
+      "s4Title": "Storage (Supabase)",
+      "s4Body": "Waitlist data is stored with Supabase (Supabase Inc.) in a database in the EU (Frankfurt). A data processing agreement (Art. 28 GDPR) is in place with the provider. We delete your data when you withdraw consent, and at the latest 24 months after sign-up.",
+      "s5Title": "Anonymous usage counts",
+      "s5Body": "We count page views and steps in the sign-up flow to understand how many people are interested in FixFlix. Only the event, the page path, the language and where the visit came from are counted — no IP address, no device identifier, no cookies. The legal basis is our legitimate interest (Art. 6(1)(f) GDPR).",
+      "s6Title": "Protection against abuse",
+      "s6Body": "To keep the waitlist from being distorted or overloaded by automated requests, we limit the number of requests per internet connection. For this, a pseudonymous short value (hash) that changes daily is derived from your IP address and stored for at most 48 hours; we do not store the IP address itself. Before submitting, your browser also solves a small computing task (“I am not a robot”) — without third parties and without cookies. The legal basis is our legitimate interest in a secure service (Art. 6(1)(f) GDPR).",
+      "s7Title": "Cookies",
+      "s7Body": "We do not use cookies and do not store any information on your device.",
+      "s8Title": "Your rights",
+      "s8Body": "You have the right to access, rectification, erasure, restriction of processing and data portability, as well as to object and to withdraw your consent. Write to us at {{email}}. You can also lodge a complaint with a data protection authority."
+    }
+  },
+  "humanCheck": {
+    "label": "I am not a robot",
+    "working": "One moment, checking …",
+    "done": "Confirmed — thank you!",
+    "hint": "A quick spam check. No puzzle, no cookies.",
+    "error": "That did not work. Please tap the box again.",
+    "rateLimited": "Too many attempts from this connection. Please try again in an hour."
+  },
+  "errors": {
+    "rate_limited": "Too many sign-ups came from this connection just now. Please try again in an hour.",
+    "busy": "It is very busy here right now. Please try again in a few minutes.",
+    "expired": "The confirmation has expired. Please tick “I am not a robot” again.",
+    "bad_challenge": "The confirmation did not work. Please tick “I am not a robot” again.",
+    "invalid_email": "Please enter a valid email address.",
+    "email_not_allowed": "Please use your real email address, not a disposable one.",
+    "invalid": "One of your entries is invalid. Please check the form.",
+    "unknown": "Something went wrong. Please try again in a moment."
+  }
+}

@@ -1,0 +1,27 @@
+# Supabase pauses free projects after a week without API traffic, and a paused
+# project rejects every sign-up. One harmless call every few days prevents that.
+name: Keep Supabase awake
+
+on:
+  schedule:
+    - cron: '17 6 */3 * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request a puzzle
+        env:
+          SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "VITE_SUPABASE_URL is not set — nothing to ping."
+            exit 0
+          fi
+          curl --fail --silent --show-error --max-time 30 -o /dev/null \
+            -X POST "$SUPABASE_URL/rest/v1/rpc/get_challenge" \
+            -H "apikey: $SUPABASE_KEY" -H "Content-Type: application/json" -d '{}'

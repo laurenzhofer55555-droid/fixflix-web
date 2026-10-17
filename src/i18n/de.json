@@ -1,0 +1,128 @@
+{
+  "common": {
+    "back": "Zurück",
+    "next": "Weiter",
+    "step": "Schritt {{current}} von {{total}}",
+    "error": "Etwas ist schiefgelaufen. Bitte versuch es gleich noch einmal.",
+    "emailInvalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
+    "plzInvalid": "Bitte gib eine gültige Postleitzahl ein (5 Ziffern)."
+  },
+  "brand": {
+    "tagline": "Alltagshilfe aus deiner Nachbarschaft"
+  },
+  "landing": {
+    "heroTitle": "Hilfe für Zuhause — fair, flexibel, aus deiner Nähe",
+    "heroSubtitle": "FixFlix verbindet Menschen, die im Alltag Unterstützung brauchen, mit talentierten Helfer:innen aus der Nachbarschaft. Fix angefragt, flix erledigt.",
+    "ctaSeekerTitle": "Ich suche Hilfe",
+    "ctaSeekerText": "Möbel aufbauen, kleine Reparaturen, streichen, Garten — beschreib einfach, was ansteht.",
+    "ctaSeekerButton": "Hilfe finden",
+    "ctaHelperTitle": "Ich packe gern an",
+    "ctaHelperText": "Verdiene mit deinem Talent — flexibel, in deiner Gegend, wann es dir passt.",
+    "ctaHelperButton": "Helfer:in werden",
+    "howTitle": "So funktioniert FixFlix",
+    "how1Title": "Beschreiben",
+    "how1Text": "Sag uns, was zu tun ist und wo.",
+    "how2Title": "Verbinden",
+    "how2Text": "Wir finden passende Helfer:innen in deiner Nähe.",
+    "how3Title": "Erledigen",
+    "how3Text": "Ihr macht den Rest direkt miteinander aus.",
+    "legalNote": "FixFlix vermittelt Alltagshilfe und einfache Tätigkeiten — keine zulassungspflichtigen Handwerksleistungen."
+  },
+  "categories": {
+    "assemble": "Aufbauen & Montieren",
+    "repair": "Kleine Reparaturen",
+    "mount": "Anbringen & Aufhängen",
+    "paint": "Streichen & Verschönern",
+    "garden": "Garten & Außenbereich",
+    "transport": "Umzug & Transport",
+    "household": "Haushalt & Ordnung"
+  },
+  "seeker": {
+    "categoriesTitle": "Was steht bei dir an?",
+    "categoriesHint": "Wähle eine oder mehrere Tätigkeiten aus.",
+    "detailsTitle": "Erzähl uns kurz mehr",
+    "descriptionLabel": "Was genau ist zu tun? (optional)",
+    "descriptionPlaceholder": "z. B. Ein Regal aufbauen und zwei Bilder aufhängen …",
+    "plzLabel": "Deine Postleitzahl"
+  },
+  "helper": {
+    "categoriesTitle": "Womit kannst du helfen?",
+    "categoriesHint": "Wähle alles aus, was du gut kannst.",
+    "detailsTitle": "Wo und mit wie viel Erfahrung?",
+    "plzLabel": "Deine Postleitzahl",
+    "levelLabel": "Deine Erfahrung",
+    "levelHobby": "Hobby — ich helfe gelegentlich",
+    "levelAdvanced": "Fortgeschritten — schon viel Übung",
+    "levelPro": "Profi — beruflicher Hintergrund"
+  },
+  "waitlist": {
+    "seekerTitle": "Eine Sache noch …",
+    "seekerText": "Die FixFlix-App kommt bald: Helfer:innen aus deiner Nähe finden, direkt chatten, Bewertungen sehen — alles an einem Ort.",
+    "helperTitle": "Fast geschafft!",
+    "helperText": "Mit der FixFlix-App findest du bald passende Anfragen aus deiner Gegend in deinem Feed — mit Chat und eigenem Profil.",
+    "wantsAppQuestion": "Würdest du die FixFlix-App nutzen?",
+    "wantsAppYes": "Ja, will ich haben!",
+    "wantsAppNo": "Eher nicht",
+    "emailLabel": "Deine E-Mail-Adresse",
+    "emailPlaceholder": "du@beispiel.de",
+    "emailHint": "Wir melden uns, sobald FixFlix in deiner Region startet.",
+    "consent": "Ich bin einverstanden, dass meine Angaben zur Kontaktaufnahme gespeichert werden. Details in der <privacy>Datenschutzerklärung</privacy>.",
+    "submit": "Auf die Warteliste"
+  },
+  "success": {
+    "title": "Du bist auf der Liste!",
+    "seekerText": "Danke dir! Wir melden uns, sobald FixFlix in deiner Region startet.",
+    "helperText": "Danke dir! Wir melden uns, sobald du mit FixFlix loslegen kannst.",
+    "backHome": "Zur Startseite"
+  },
+  "footer": {
+    "imprint": "Impressum",
+    "privacy": "Datenschutz",
+    "note": "© 2026 FixFlix — MVP zur Marktvalidierung"
+  },
+  "legal": {
+    "imprintTitle": "Impressum",
+    "privacyTitle": "Datenschutzerklärung",
+    "todo": "Angaben unvollständig: Trage deine echten Betreiberdaten in src/config/site.ts ein, bevor du die Seite veröffentlichst.",
+    "imprintHeading": "Angaben gemäß § 5 DDG",
+    "contact": "Kontakt",
+    "emailLabel": "E-Mail",
+    "phoneLabel": "Telefon",
+    "privacy": {
+      "s1Title": "Verantwortlicher",
+      "s1Body": "{{name}}, {{street}}, {{city}} · E-Mail: {{email}}",
+      "s2Title": "Hosting (GitHub Pages)",
+      "s2Body": "Diese Website wird über GitHub Pages (GitHub Inc., USA) ausgeliefert. Beim Aufruf verarbeitet GitHub technisch notwendige Verbindungsdaten wie die IP-Adresse in Server-Logs. Rechtsgrundlage ist unser berechtigtes Interesse an einem sicheren und stabilen Betrieb (Art. 6 Abs. 1 lit. f DSGVO).",
+      "s3Title": "Warteliste",
+      "s3Body": "Wenn du dich auf die Warteliste einträgst, speichern wir deine E-Mail-Adresse, Postleitzahl, gewählte Tätigkeiten, optional deine Beschreibung bzw. dein Erfahrungslevel, deine Antwort auf die Frage, ob du die App nutzen würdest, die Sprache, die Herkunft deines Besuchs (z. B. die Quelle des Links) und den Zeitpunkt der Eintragung. Zweck ist, dich über den Start von FixFlix zu informieren und den Bedarf an dem Produkt auszuwerten. Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du jederzeit widerrufen kannst.",
+      "s4Title": "Speicherung (Supabase)",
+      "s4Body": "Die Daten der Warteliste werden bei Supabase (Supabase Inc.) in einer Datenbank in der EU (Frankfurt) gespeichert. Mit dem Anbieter besteht ein Auftragsverarbeitungsvertrag (Art. 28 DSGVO). Wir löschen deine Daten, wenn du widerrufst, spätestens 24 Monate nach der Eintragung.",
+      "s5Title": "Anonyme Reichweitenmessung",
+      "s5Body": "Wir zählen Seitenaufrufe und Schritte im Anmeldeprozess, um zu verstehen, wie viele Menschen sich für FixFlix interessieren. Gezählt werden nur das Ereignis, der Seitenpfad, die Sprache und die Herkunft des Besuchs — keine IP-Adresse, keine Geräte-Kennung, keine Cookies. Rechtsgrundlage ist unser berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO).",
+      "s6Title": "Schutz vor Missbrauch",
+      "s6Body": "Damit die Warteliste nicht durch automatisierte Anfragen verfälscht oder überlastet wird, begrenzen wir die Zahl der Anfragen pro Internetanschluss. Dafür wird aus deiner IP-Adresse ein pseudonymer, täglich wechselnder Kurzwert (Hash) gebildet und höchstens 48 Stunden gespeichert; die IP-Adresse selbst speichern wir nicht. Vor dem Absenden löst dein Browser außerdem eine kleine Rechenaufgabe („Ich bin kein Roboter“) — ohne Drittanbieter und ohne Cookies. Rechtsgrundlage ist unser berechtigtes Interesse an einem sicheren Betrieb (Art. 6 Abs. 1 lit. f DSGVO).",
+      "s7Title": "Cookies",
+      "s7Body": "Wir setzen keine Cookies ein und speichern keine Informationen auf deinem Gerät.",
+      "s8Title": "Deine Rechte",
+      "s8Body": "Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Datenübertragbarkeit sowie auf Widerspruch und Widerruf deiner Einwilligung. Schreib uns dazu an {{email}}. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren."
+    }
+  },
+  "humanCheck": {
+    "label": "Ich bin kein Roboter",
+    "working": "Einen Moment, wird geprüft …",
+    "done": "Bestätigt — danke!",
+    "hint": "Kurzer Schutz vor Spam. Kein Rätsel, keine Cookies.",
+    "error": "Das hat nicht geklappt. Bitte tippe noch einmal auf das Kästchen.",
+    "rateLimited": "Zu viele Versuche von diesem Anschluss. Bitte probiere es in einer Stunde noch einmal."
+  },
+  "errors": {
+    "rate_limited": "Von diesem Anschluss kamen gerade zu viele Anmeldungen. Bitte versuche es in einer Stunde noch einmal.",
+    "busy": "Gerade ist hier sehr viel los. Bitte versuche es in ein paar Minuten noch einmal.",
+    "expired": "Die Bestätigung ist abgelaufen. Bitte setze den Haken bei „Ich bin kein Roboter“ noch einmal.",
+    "bad_challenge": "Die Bestätigung hat nicht funktioniert. Bitte setze den Haken bei „Ich bin kein Roboter“ noch einmal.",
+    "invalid_email": "Bitte gib eine gültige E-Mail-Adresse ein.",
+    "email_not_allowed": "Bitte verwende deine echte E-Mail-Adresse, keine Wegwerf-Adresse.",
+    "invalid": "Eine Angabe ist ungültig. Bitte prüfe deine Eingaben.",
+    "unknown": "Etwas ist schiefgelaufen. Bitte versuch es gleich noch einmal."
+  }
+}
