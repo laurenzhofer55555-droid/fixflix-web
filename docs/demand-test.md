@@ -18,12 +18,19 @@ privaten Hauptprojekt; `scripts/export-site.sh` kopiert nur die Website heraus.
 
 ## 2. Supabase einrichten (10 Minuten)
 
-1. [supabase.com](https://supabase.com) → **New project**, Region **Central EU (Frankfurt)**.
-2. **SQL Editor** → New query → kompletten Inhalt von [`supabase/schema.sql`](../supabase/schema.sql)
-   einfügen → **Run**. Ein zweiter Lauf schadet nicht.
-3. **Project Settings → API Keys**: *Project URL* und den *publishable* Key (alt: *anon public*) kopieren.
-   Beides ist öffentlich gedacht. Den *secret*/`service_role`-Key niemals in die Website eintragen.
-4. Im Dashboard **keine** zusätzlichen Policies oder Rechte für Tabellen anlegen — der Schutz
+1. [supabase.com](https://supabase.com) → anmelden (am einfachsten mit „Continue with GitHub") →
+   beim ersten Mal eine Organisation anlegen (Typ *Personal*, Plan *Free*).
+2. **New project**: Name `fixflix`, Datenbank-Passwort erzeugen lassen und im Passwort-Manager
+   speichern, Region **Central EU (Frankfurt)**. Falls das Formular Data-API-Optionen zeigt: Data API
+   **an**, Schema `public`. „Automatically expose new tables" darf aus bleiben — das Skript gibt
+   Besuchern ausdrücklich nur die drei Funktionen frei. Warten, bis das Projekt bereit ist (1–2 Minuten).
+3. **SQL Editor** → neue Abfrage → kompletten Inhalt von [`supabase/schema.sql`](../supabase/schema.sql)
+   einfügen → **Run**. Warnt Supabase vor „destructive operations", bestätigen: Das Skript entzieht
+   Besuchern nur Rechte und löscht keine Daten. Ein zweiter Lauf schadet nicht.
+4. Oben **Connect** (oder **Project Settings → API Keys**): *Project URL* und den *publishable* Key
+   (`sb_publishable_…`, alt: *anon public* `eyJ…`) kopieren. Beides ist öffentlich gedacht. Den
+   *secret*-Key (`sb_secret_…`/`service_role`) niemals in die Website eintragen.
+5. Im Dashboard **keine** zusätzlichen Policies oder Rechte für Tabellen anlegen — der Schutz
    besteht genau darin, dass Besucher keine Tabelle direkt erreichen (siehe Abschnitt 7).
 
 ## 3. Website-Repo erzeugen und auf GitHub bringen

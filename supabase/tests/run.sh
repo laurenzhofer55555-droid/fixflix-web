@@ -38,26 +38,38 @@ create role authenticated nologin;
 create role authenticator login password 'test' noinherit;
 grant anon to authenticator;
 create database sqlsuite;
+create database strictsuite;
 create database apisuite;
 SQL
 
-for db in sqlsuite apisuite; do
-  sql -d "$db" -v ON_ERROR_STOP=1 >/dev/null 2>&1 <<'SQL'
+# strictsuite mimics projects created since mid-2026: nothing is exposed by default.
+for db in sqlsuite strictsuite apisuite; do
+  if [ "$db" != strictsuite ]; then
+    sql -d "$db" -v ON_ERROR_STOP=1 >/dev/null 2>&1 <<'SQL'
 alter default privileges in schema public grant all on tables to anon, authenticated;
 alter default privileges in schema public grant all on functions to anon, authenticated;
 grant usage on schema public to anon, authenticated;
 SQL
+  else
+    sql -d "$db" -q -c 'revoke all on schema public from public;' >/dev/null
+  fi
   sql -d "$db" -v ON_ERROR_STOP=1 < "$here/../schema.sql" 2>&1 | grep -v '^NOTICE' || true
   # Second run must be harmless: people re-run scripts in the SQL editor.
   sql -d "$db" -v ON_ERROR_STOP=1 < "$here/../schema.sql" 2>&1 | grep -v '^NOTICE' || true
 done
 
-echo "### SQL suite (as the anon role)"
-sql_out="$(sql -d sqlsuite -v ON_ERROR_STOP=0 < "$here/abuse.sql" 2>&1 | grep -vE '^$|^(NOTICE|DETAIL|drop cascades)' || true)"
-echo "$sql_out" | grep -vE '^PASS' || true
-sql_pass="$(echo "$sql_out" | grep -c '^PASS' || true)"
-sql_fail="$(echo "$sql_out" | grep -vcE '^(PASS|==)' || true)"
-echo "    $sql_pass passed, $sql_fail failed"
+sql_pass=0
+sql_fail=0
+for db in sqlsuite strictsuite; do
+  echo "### SQL suite as the anon role ($db)"
+  out="$(sql -d "$db" -v ON_ERROR_STOP=0 < "$here/abuse.sql" 2>&1 | grep -vE '^$|^(NOTICE|DETAIL|drop cascades)' || true)"
+  echo "$out" | grep -vE '^(PASS|==)' || true
+  pass="$(echo "$out" | grep -c '^PASS' || true)"
+  fail="$(echo "$out" | grep -vcE '^(PASS|==)' || true)"
+  echo "    $pass passed, $fail failed"
+  sql_pass=$((sql_pass + pass))
+  sql_fail=$((sql_fail + fail))
+done
 
 echo "### API suite (HTTP through PostgREST)"
 docker run -d --name "$api" --network "$net" -p "127.0.0.1:$port:3000" \

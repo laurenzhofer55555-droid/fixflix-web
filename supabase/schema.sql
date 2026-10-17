@@ -420,6 +420,9 @@ $$;
 -- Privileges: visitors get the three functions and nothing else
 -- ---------------------------------------------------------------------------
 
+-- Explicit on purpose: projects created since mid-2026 no longer expose
+-- new objects to the API roles by default.
+grant usage on schema public to anon;
 revoke all on all tables in schema public from anon, authenticated;
 revoke all on all functions in schema public from public, anon, authenticated;
 
