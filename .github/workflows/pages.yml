@@ -44,12 +44,33 @@ jobs:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
 
+      # Asks the real project for a puzzle: proves URL, key and schema.sql are
+      # all in place before anything is published.
       - name: Refuse to publish a site that cannot store sign-ups
+        env:
+          SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
         run: |
-          if [ -z "${{ vars.VITE_SUPABASE_URL }}" ] || [ -z "${{ vars.VITE_SUPABASE_ANON_KEY }}" ]; then
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
             echo "::error::Repository variables VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are missing."
             exit 1
           fi
+          if ! printf '%s' "$SUPABASE_URL" | grep -Eq '^https://[a-z0-9-]+(\.[a-z0-9-]+)+/?$'; then
+            echo "::error::VITE_SUPABASE_URL must look like https://<project-ref>.supabase.co (got: $SUPABASE_URL)."
+            exit 1
+          fi
+          status=$(curl --silent --output body.json --write-out '%{http_code}' --max-time 20 \
+            -X POST "${SUPABASE_URL%/}/rest/v1/rpc/get_challenge" \
+            -H "apikey: $SUPABASE_KEY" -H "Content-Type: application/json" -d '{}' || true)
+          case "$status" in
+            200) grep -q '"challenge"' body.json && exit 0
+                 echo "::error::Supabase answered, but not with a puzzle. Run supabase/schema.sql again." ;;
+            401|403) echo "::error::Supabase rejected VITE_SUPABASE_ANON_KEY. Copy the publishable (or anon) key again." ;;
+            404) echo "::error::Function get_challenge not found. Run supabase/schema.sql in the Supabase SQL editor." ;;
+            000) echo "::error::Could not reach $SUPABASE_URL. Check VITE_SUPABASE_URL." ;;
+            *) echo "::error::Unexpected answer from Supabase (HTTP $status)."; cat body.json ;;
+          esac
+          exit 1
 
       - uses: actions/upload-pages-artifact@v3
         with:
