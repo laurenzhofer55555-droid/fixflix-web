@@ -55,9 +55,11 @@ git push -u origin main
 
 **e) Pages einschalten:** Repo → **Settings → Pages → Source: GitHub Actions**. Dann
 **Settings → Secrets and variables → Actions → Variables** (nicht „Secrets") anlegen:
-`VITE_SUPABASE_URL` und `VITE_SUPABASE_ANON_KEY`. Danach **Actions → Deploy site to GitHub Pages →
-Run workflow**. Ohne die beiden Variablen bricht der Workflow absichtlich ab, statt eine Seite zu
-veröffentlichen, die keine Anmeldungen speichern kann.
+`VITE_SUPABASE_URL` (z. B. `https://abcdefghijklmnopqrst.supabase.co`) und `VITE_SUPABASE_ANON_KEY`
+(beginnt mit `sb_publishable_` oder `eyJ`) — die echten Werte, ohne spitze Klammern. Danach
+**Actions → Deploy site to GitHub Pages → Run workflow**. Vor dem Veröffentlichen fragt der Workflow
+einmal bei Supabase an; stimmen URL, Schlüssel oder das Schema-Skript nicht, bricht er mit einer
+Meldung ab, die sagt, was fehlt, statt eine Seite zu veröffentlichen, die keine Anmeldungen speichern kann.
 
 **Spätere Änderungen:** im Hauptprojekt ändern, `scripts/export-site.sh ~/Desktop/fixflix-web`
 erneut ausführen, im Export-Ordner committen und pushen. Ein bestehender Export wird aktualisiert,
