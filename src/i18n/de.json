@@ -103,8 +103,10 @@
       "s6Body": "Damit die Warteliste nicht durch automatisierte Anfragen verfälscht oder überlastet wird, begrenzen wir die Zahl der Anfragen pro Internetanschluss. Dafür wird aus deiner IP-Adresse ein pseudonymer, täglich wechselnder Kurzwert (Hash) gebildet und höchstens 48 Stunden gespeichert; die IP-Adresse selbst speichern wir nicht. Vor dem Absenden löst dein Browser außerdem eine kleine Rechenaufgabe („Ich bin kein Roboter“) — ohne Drittanbieter und ohne Cookies. Rechtsgrundlage ist unser berechtigtes Interesse an einem sicheren Betrieb (Art. 6 Abs. 1 lit. f DSGVO).",
       "s7Title": "Cookies",
       "s7Body": "Wir setzen keine Cookies ein und speichern keine Informationen auf deinem Gerät.",
-      "s8Title": "Deine Rechte",
-      "s8Body": "Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Datenübertragbarkeit sowie auf Widerspruch und Widerruf deiner Einwilligung. Schreib uns dazu an {{email}}. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren."
+      "s8Title": "Kontakt per E-Mail",
+      "s8Body": "Wenn du uns an {{email}} schreibst, wird deine Nachricht über den Weiterleitungsdienst ImprovMX an ein E-Mail-Postfach bei Google (Gmail) zugestellt. Wir nutzen deine Angaben nur, um deine Anfrage zu beantworten, und löschen sie, sobald sie dafür nicht mehr nötig sind. Rechtsgrundlage ist unser berechtigtes Interesse an der Beantwortung von Anfragen (Art. 6 Abs. 1 lit. f DSGVO).",
+      "s9Body": "Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Datenübertragbarkeit sowie auf Widerspruch und Widerruf deiner Einwilligung. Schreib uns dazu an {{email}}. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren.",
+      "s9Title": "Deine Rechte"
     }
   },
   "humanCheck": {

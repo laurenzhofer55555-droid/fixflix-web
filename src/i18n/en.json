@@ -103,8 +103,10 @@
       "s6Body": "To keep the waitlist from being distorted or overloaded by automated requests, we limit the number of requests per internet connection. For this, a pseudonymous short value (hash) that changes daily is derived from your IP address and stored for at most 48 hours; we do not store the IP address itself. Before submitting, your browser also solves a small computing task (“I am not a robot”) — without third parties and without cookies. The legal basis is our legitimate interest in a secure service (Art. 6(1)(f) GDPR).",
       "s7Title": "Cookies",
       "s7Body": "We do not use cookies and do not store any information on your device.",
-      "s8Title": "Your rights",
-      "s8Body": "You have the right to access, rectification, erasure, restriction of processing and data portability, as well as to object and to withdraw your consent. Write to us at {{email}}. You can also lodge a complaint with a data protection authority."
+      "s8Title": "Contact by email",
+      "s8Body": "If you write to us at {{email}}, your message is delivered via the forwarding service ImprovMX to a mailbox at Google (Gmail). We only use your details to answer your request and delete them once they are no longer needed for that. The legal basis is our legitimate interest in answering enquiries (Art. 6(1)(f) GDPR).",
+      "s9Body": "You have the right to access, rectification, erasure, restriction of processing and data portability, as well as to object and to withdraw your consent. Write to us at {{email}}. You can also lodge a complaint with a data protection authority.",
+      "s9Title": "Your rights"
     }
   },
   "humanCheck": {

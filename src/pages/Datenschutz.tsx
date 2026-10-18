@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { site, siteIsConfigured } from '../config/site'
 
-const SECTIONS = [1, 2, 3, 4, 5, 6, 7, 8] as const
+const SECTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 
 export default function Datenschutz() {
   const { t } = useTranslation()

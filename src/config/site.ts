@@ -4,10 +4,10 @@
  * every TODO.
  */
 export const site = {
-  name: 'TODO Vor- und Nachname',
-  street: 'TODO Straße und Hausnummer',
-  city: 'TODO PLZ Ort',
-  email: 'TODO kontakt@deine-domain.de',
+  name: 'Laurenz Hofer',
+  street: 'Berg 112',
+  city: '83734 Hausham',
+  email: 'kontakt@fixflix.space',
   phone: '',
 }
 
