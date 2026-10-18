@@ -59,7 +59,9 @@ export function initAnalytics() {
 function currentPath(): string {
   const base = import.meta.env.BASE_URL.replace(/\/+$/, '')
   const path = window.location.pathname
-  return (base && path.startsWith(base) ? path.slice(base.length) : path) || '/'
+  const relative = (base && path.startsWith(base) ? path.slice(base.length) : path).replace(/\.html$/, '')
+  // The database only counts known paths, so "/impressum/" must become "/impressum".
+  return relative.replace(/\/+$/, '') || '/'
 }
 
 /**
