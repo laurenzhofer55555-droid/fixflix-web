@@ -13,8 +13,9 @@ privaten Hauptprojekt; `scripts/export-site.sh` kopiert nur die Website heraus.
    Der gelbe Hinweis auf Impressum/Datenschutz verschwindet, sobald kein `TODO` mehr drinsteht.
 2. Datenschutz-Text (`src/i18n/de.json` → `legal.privacy`) einmal rechtlich prüfen lassen.
    Er beschreibt GitHub Pages, Supabase, die Zähler und den Missbrauchsschutz so, wie sie tatsächlich arbeiten.
-3. Den Auftragsverarbeitungsvertrag (DPA) mit Supabase abschließen (supabase.com/legal/dpa bzw.
-   „Legal Documents" in den Organisations-Einstellungen), sonst stimmt Abschnitt 4 des Textes nicht.
+3. Auftragsverarbeitungsvertrag (DPA) mit Supabase: Er ist Bestandteil der Supabase-Nutzungsbedingungen
+   und gilt für jede Organisation automatisch, unterschreiben musst du nichts. Für deine Unterlagen
+   DPA und TIA unter „Legal Documents" in den Organisations-Einstellungen herunterladen und ablegen.
 
 ## 2. Supabase einrichten (10 Minuten)
 
