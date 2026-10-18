@@ -43,6 +43,19 @@ describe('landing page', () => {
     renderAt('/')
     expect(screen.getByRole('link', { name: 'Find help' })).toBeInTheDocument()
   })
+
+  it('explains FixFlix in detail below the short intro', () => {
+    renderAt('/')
+    expect(screen.getByRole('heading', { name: 'FixFlix genauer erklärt' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Wenn du Hilfe suchst' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Wenn du helfen möchtest' })).toBeInTheDocument()
+  })
+
+  it.each(['de', 'en'])('shows no dashes in %s', async (lang) => {
+    await i18n.changeLanguage(lang)
+    const { container } = renderAt('/')
+    expect(container.textContent).not.toMatch(/[—–]/)
+  })
 })
 
 describe('seeker funnel', () => {
@@ -51,20 +64,20 @@ describe('seeker funnel', () => {
     renderAt('/finden')
 
     // Step 1: categories — no app pitch visible yet
-    expect(screen.queryByText('Würdest du die FixFlix-App nutzen?')).not.toBeInTheDocument()
+    expect(screen.queryByText('Würdest du die FixFlix App nutzen?')).not.toBeInTheDocument()
     const next = screen.getByRole('button', { name: 'Weiter' })
     expect(next).toBeDisabled()
     await user.click(screen.getByRole('button', { name: /Aufbauen & Montieren/ }))
     await user.click(next)
 
     // Step 2: description + postal code — still no app pitch
-    expect(screen.queryByText('Würdest du die FixFlix-App nutzen?')).not.toBeInTheDocument()
+    expect(screen.queryByText('Würdest du die FixFlix App nutzen?')).not.toBeInTheDocument()
     await user.type(screen.getByLabelText(/Was genau ist zu tun/), 'Regal aufbauen')
     await user.type(screen.getByLabelText('Deine Postleitzahl'), '10115')
     await user.click(screen.getByRole('button', { name: 'Weiter' }))
 
     // Step 3: PMF reveal + waitlist
-    expect(screen.getByText('Würdest du die FixFlix-App nutzen?')).toBeInTheDocument()
+    expect(screen.getByText('Würdest du die FixFlix App nutzen?')).toBeInTheDocument()
     vi.advanceTimersByTime(HUMAN_PAUSE_MS)
     const submit = screen.getByRole('button', { name: 'Auf die Warteliste' })
     expect(submit).toBeDisabled()
@@ -101,7 +114,7 @@ describe('helper funnel', () => {
     const next = screen.getByRole('button', { name: 'Weiter' })
     await user.type(screen.getByLabelText('Deine Postleitzahl'), '80331')
     expect(next).toBeDisabled()
-    await user.click(screen.getByRole('button', { name: /Hobby — ich helfe gelegentlich/ }))
+    await user.click(screen.getByRole('button', { name: /Hobby: Ich helfe gelegentlich/ }))
     await user.click(next)
     vi.advanceTimersByTime(HUMAN_PAUSE_MS)
 

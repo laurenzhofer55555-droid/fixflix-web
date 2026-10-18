@@ -11,13 +11,13 @@
     "tagline": "Everyday help from your neighbourhood"
   },
   "landing": {
-    "heroTitle": "Help for your home — fair, flexible, close by",
-    "heroSubtitle": "FixFlix connects people who need a hand around the house with talented helpers from the neighbourhood. Ask quick, fixed quick.",
+    "heroTitle": "Everyday help from your neighbourhood",
+    "heroSubtitle": "Need a helping hand? FixFlix finds helpers near you.",
     "ctaSeekerTitle": "I need help",
-    "ctaSeekerText": "Assembling furniture, small repairs, painting, gardening — just tell us what needs doing.",
+    "ctaSeekerText": "Assembling furniture, small repairs, painting or gardening: just tell us what needs doing.",
     "ctaSeekerButton": "Find help",
     "ctaHelperTitle": "I love getting things done",
-    "ctaHelperText": "Earn with your talent — flexibly, in your area, whenever it suits you.",
+    "ctaHelperText": "Earn with your talent. Flexibly, in your area and whenever it suits you.",
     "ctaHelperButton": "Become a helper",
     "howTitle": "How FixFlix works",
     "how1Title": "Describe",
@@ -26,7 +26,17 @@
     "how2Text": "We find suitable helpers near you.",
     "how3Title": "Get it done",
     "how3Text": "You arrange the rest directly with each other.",
-    "legalNote": "FixFlix connects people for everyday help and simple tasks — not for licensed trade services."
+    "legalNote": "FixFlix connects people for everyday help and simple tasks, not for licensed trade services.",
+    "detailsTitle": "FixFlix in more detail",
+    "detailsIntro": "FixFlix is a platform for everyday help. It brings people who need support together with helpers from the same area. Simple, fair and with fixed appointments.",
+    "details1Title": "If you need help",
+    "details1Text": "You briefly describe what needs doing, for example assembling a shelf, mounting a lamp or tidying up the garden. Then you pick a few days and time windows that suit you. Helpers near you send you an offer with a fixed appointment and price, and you decide whom to choose.",
+    "details2Title": "If you want to help",
+    "details2Text": "You set what you are good at and which area you cover. Then you see matching requests near you and propose the appointment and price yourself. You help whenever it fits your life, occasionally as a hobby or on a regular basis.",
+    "details3Title": "What FixFlix covers",
+    "details3Text": "Assembling and mounting furniture, small repairs, hanging pictures and shelves, painting, garden and outdoor work, help with moving and around the house. Work that legally requires a licensed master craftsman, such as on electrical, gas or water installations, is not arranged through FixFlix.",
+    "details4Title": "Fair and reliable",
+    "details4Text": "Appointment and price are fixed before anyone comes by. After each job you rate each other, which builds trust in the neighbourhood. You agree on the price in advance and settle payment directly with each other."
   },
   "categories": {
     "assemble": "Assembly & Mounting",
@@ -51,15 +61,15 @@
     "detailsTitle": "Where, and how experienced are you?",
     "plzLabel": "Your postal code",
     "levelLabel": "Your experience",
-    "levelHobby": "Hobby — I help out occasionally",
-    "levelAdvanced": "Advanced — lots of practice",
-    "levelPro": "Pro — professional background"
+    "levelHobby": "Hobby: I help out occasionally",
+    "levelAdvanced": "Advanced: I have lots of practice",
+    "levelPro": "Pro: I have a professional background"
   },
   "waitlist": {
     "seekerTitle": "One more thing …",
-    "seekerText": "The FixFlix app is coming soon: find helpers near you, chat directly, see reviews — all in one place.",
+    "seekerText": "The FixFlix app is coming soon: find helpers near you, chat directly and see reviews, all in one place.",
     "helperTitle": "Almost there!",
-    "helperText": "With the FixFlix app you'll soon see matching requests from your area in your feed — with chat and your own profile.",
+    "helperText": "With the FixFlix app you'll soon see matching requests from your area in your feed, with chat and your own profile.",
     "wantsAppQuestion": "Would you use the FixFlix app?",
     "wantsAppYes": "Yes, I want it!",
     "wantsAppNo": "Probably not",
@@ -78,7 +88,7 @@
   "footer": {
     "imprint": "Legal notice",
     "privacy": "Privacy",
-    "note": "© 2026 FixFlix — MVP for market validation"
+    "note": "© 2026 FixFlix · MVP for market validation"
   },
   "legal": {
     "imprintTitle": "Legal notice (Impressum)",
@@ -98,9 +108,9 @@
       "s4Title": "Storage (Supabase)",
       "s4Body": "Waitlist data is stored with Supabase (Supabase Inc.) in a database in the EU (Frankfurt). A data processing agreement (Art. 28 GDPR) is in place with the provider. We delete your data when you withdraw consent, and at the latest 24 months after sign-up.",
       "s5Title": "Anonymous usage counts",
-      "s5Body": "We count page views and steps in the sign-up flow to understand how many people are interested in FixFlix. Only the event, the page path, the language and where the visit came from are counted — no IP address, no device identifier, no cookies. The legal basis is our legitimate interest (Art. 6(1)(f) GDPR).",
+      "s5Body": "We count page views and steps in the sign-up flow to understand how many people are interested in FixFlix. Only the event, the page path, the language and where the visit came from are counted. No IP address, no device identifier, no cookies. The legal basis is our legitimate interest (Art. 6(1)(f) GDPR).",
       "s6Title": "Protection against abuse",
-      "s6Body": "To keep the waitlist from being distorted or overloaded by automated requests, we limit the number of requests per internet connection. For this, a pseudonymous short value (hash) that changes daily is derived from your IP address and stored for at most 48 hours; we do not store the IP address itself. Before submitting, your browser also solves a small computing task (“I am not a robot”) — without third parties and without cookies. The legal basis is our legitimate interest in a secure service (Art. 6(1)(f) GDPR).",
+      "s6Body": "To keep the waitlist from being distorted or overloaded by automated requests, we limit the number of requests per internet connection. For this, a pseudonymous short value (hash) that changes daily is derived from your IP address and stored for at most 48 hours; we do not store the IP address itself. Before submitting, your browser also solves a small computing task (“I am not a robot”), without third parties and without cookies. The legal basis is our legitimate interest in a secure service (Art. 6(1)(f) GDPR).",
       "s7Title": "Cookies",
       "s7Body": "We do not use cookies and do not store any information on your device.",
       "s8Title": "Contact by email",
@@ -112,7 +122,7 @@
   "humanCheck": {
     "label": "I am not a robot",
     "working": "One moment, checking …",
-    "done": "Confirmed — thank you!",
+    "done": "Confirmed, thank you!",
     "hint": "A quick spam check. No puzzle, no cookies.",
     "error": "That did not work. Please tap the box again.",
     "rateLimited": "Too many attempts from this connection. Please try again in an hour."

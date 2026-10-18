@@ -78,7 +78,7 @@ describe('"I am not a robot" check', () => {
     expect(submitButton()).toBeDisabled()
 
     await user.click(robotBox())
-    expect(await screen.findByRole('checkbox', { name: 'Bestätigt — danke!' })).toBeChecked()
+    expect(await screen.findByRole('checkbox', { name: 'Bestätigt, danke!' })).toBeChecked()
     expect(submitButton()).toBeEnabled()
 
     await user.click(submitButton())
@@ -95,11 +95,11 @@ describe('"I am not a robot" check', () => {
     replies.submit_lead = refusal(429, 'rate_limited')
     const user = await reachWaitlistStep()
     await user.click(robotBox())
-    await screen.findByRole('checkbox', { name: 'Bestätigt — danke!' })
+    await screen.findByRole('checkbox', { name: 'Bestätigt, danke!' })
     await user.click(submitButton())
 
     expect(await screen.findByText(/zu viele Anmeldungen/)).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: 'Bestätigt — danke!' })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: 'Bestätigt, danke!' })).toBeChecked()
     expect(screen.queryByText('Du bist auf der Liste!')).not.toBeInTheDocument()
   })
 
@@ -107,7 +107,7 @@ describe('"I am not a robot" check', () => {
     replies.submit_lead = refusal(410, 'challenge_expired')
     const user = await reachWaitlistStep()
     await user.click(robotBox())
-    await screen.findByRole('checkbox', { name: 'Bestätigt — danke!' })
+    await screen.findByRole('checkbox', { name: 'Bestätigt, danke!' })
     await user.click(submitButton())
 
     expect(await screen.findByText(/Bestätigung ist abgelaufen/)).toBeInTheDocument()
@@ -119,10 +119,10 @@ describe('"I am not a robot" check', () => {
     replies.submit_lead = refusal(400, 'email_not_allowed')
     const user = await reachWaitlistStep()
     await user.click(robotBox())
-    await screen.findByRole('checkbox', { name: 'Bestätigt — danke!' })
+    await screen.findByRole('checkbox', { name: 'Bestätigt, danke!' })
     await user.click(submitButton())
 
-    expect(await screen.findByText(/keine Wegwerf-Adresse/)).toBeInTheDocument()
+    expect(await screen.findByText(/keine Wegwerfadresse/)).toBeInTheDocument()
   })
 
   it('tells the visitor when the puzzle itself is rate limited', async () => {

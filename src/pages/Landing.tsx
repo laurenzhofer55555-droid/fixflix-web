@@ -51,6 +51,19 @@ export default function Landing() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="pb-12">
+        <h2 className="text-center text-2xl font-bold">{t('landing.detailsTitle')}</h2>
+        <p className="mx-auto mt-4 max-w-2xl text-center text-wood">{t('landing.detailsIntro')}</p>
+        <div className="mt-8 grid gap-6 md:grid-cols-2">
+          {([1, 2, 3, 4] as const).map((n) => (
+            <div key={n} className="rounded-3xl bg-white p-6 shadow-sm">
+              <h3 className="font-bold">{t(`landing.details${n}Title`)}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-wood">{t(`landing.details${n}Text`)}</p>
+            </div>
+          ))}
+        </div>
         <p className="mt-8 text-center text-sm text-wood/70">{t('landing.legalNote')}</p>
       </section>
     </div>
