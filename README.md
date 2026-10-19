@@ -1,7 +1,7 @@
 # FixFlix — Website
 
 Landing page and waitlist for FixFlix, hosted on GitHub Pages; sign-ups are
-stored in Supabase through three guarded database functions.
+stored in Supabase through four guarded database functions.
 
 - Setup and how to read the numbers: [docs/demand-test.md](docs/demand-test.md)
 - Database and its security rules: [supabase/schema.sql](supabase/schema.sql)

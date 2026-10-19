@@ -83,7 +83,10 @@
     "title": "Du bist auf der Liste!",
     "seekerText": "Danke dir! Wir melden uns, sobald FixFlix in deiner Region startet.",
     "helperText": "Danke dir! Wir melden uns, sobald du mit FixFlix loslegen kannst.",
-    "backHome": "Zur Startseite"
+    "backHome": "Zur Startseite",
+    "confirmTitle": "Fast geschafft!",
+    "confirmText": "Wir haben dir eine E-Mail geschickt. Bitte klick auf den Link darin, erst dann bist du auf der Liste.",
+    "confirmHint": "Keine Mail angekommen? Schau auch im Spamordner nach."
   },
   "footer": {
     "imprint": "Impressum",
@@ -106,7 +109,7 @@
       "s3Title": "Warteliste",
       "s3Body": "Wenn du dich auf die Warteliste einträgst, speichern wir deine E-Mail-Adresse, Postleitzahl, gewählte Tätigkeiten, optional deine Beschreibung bzw. dein Erfahrungslevel, deine Antwort auf die Frage, ob du die App nutzen würdest, die Sprache, die Herkunft deines Besuchs (z. B. die Quelle des Links) und den Zeitpunkt der Eintragung. Zweck ist, dich über den Start von FixFlix zu informieren und den Bedarf an dem Produkt auszuwerten. Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du jederzeit widerrufen kannst.",
       "s4Title": "Speicherung (Supabase)",
-      "s4Body": "Die Daten der Warteliste werden bei Supabase (Supabase Inc.) in einer Datenbank in der EU (Frankfurt) gespeichert. Mit dem Anbieter besteht ein Auftragsverarbeitungsvertrag (Art. 28 DSGVO). Wir löschen deine Daten, wenn du widerrufst, spätestens 24 Monate nach der Eintragung.",
+      "s4Body": "Die Daten der Warteliste werden bei Supabase (Supabase Inc.) in einer Datenbank in der EU (Frankfurt) gespeichert. Mit dem Anbieter besteht ein Auftragsverarbeitungsvertrag (Art. 28 DSGVO). Wir löschen deine Daten, wenn du widerrufst, spätestens 24 Monate nach der Eintragung. Die Löschung nach 24 Monaten erfolgt automatisch.",
       "s5Title": "Anonyme Reichweitenmessung",
       "s5Body": "Wir zählen Seitenaufrufe und Schritte im Anmeldeprozess, um zu verstehen, wie viele Menschen sich für FixFlix interessieren. Gezählt werden nur das Ereignis, der Seitenpfad, die Sprache und die Herkunft des Besuchs. Keine IP-Adresse, keine Gerätekennung, keine Cookies. Rechtsgrundlage ist unser berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO).",
       "s6Title": "Schutz vor Missbrauch",
@@ -116,7 +119,10 @@
       "s8Title": "Kontakt per E-Mail",
       "s8Body": "Wenn du uns an {{email}} schreibst, wird deine Nachricht über den Weiterleitungsdienst ImprovMX an ein E-Mail-Postfach bei Google (Gmail) zugestellt. Wir nutzen deine Angaben nur, um deine Anfrage zu beantworten, und löschen sie, sobald sie dafür nicht mehr nötig sind. Rechtsgrundlage ist unser berechtigtes Interesse an der Beantwortung von Anfragen (Art. 6 Abs. 1 lit. f DSGVO).",
       "s9Body": "Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Datenübertragbarkeit sowie auf Widerspruch und Widerruf deiner Einwilligung. Schreib uns dazu an {{email}}. Außerdem kannst du dich bei einer Datenschutzaufsichtsbehörde beschweren.",
-      "s9Title": "Deine Rechte"
+      "s9Title": "Deine Rechte",
+      "mailTitle": "Bestätigungsmail",
+      "mailBody_brevo": "Damit sich niemand mit fremden Adressen eintragen kann, schicken wir dir nach der Eintragung eine E-Mail mit einem Bestätigungslink (Double Opt-in). Erst nach dem Klick zählt dein Eintrag. Für den Versand nutzen wir den Dienst Brevo (Sendinblue SAS, Paris, Frankreich), an den dafür deine E-Mail-Adresse und deine Sprache übermittelt werden. Mit dem Anbieter besteht ein Auftragsverarbeitungsvertrag (Art. 28 DSGVO). Den Zeitpunkt der Bestätigung speichern wir als Nachweis deiner Einwilligung. Einträge ohne Bestätigung löschen wir nach 7 Tagen automatisch. Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO) sowie unser berechtigtes Interesse, Missbrauch zu verhindern (Art. 6 Abs. 1 lit. f DSGVO).",
+      "mailBody_resend": "Damit sich niemand mit fremden Adressen eintragen kann, schicken wir dir nach der Eintragung eine E-Mail mit einem Bestätigungslink (Double Opt-in). Erst nach dem Klick zählt dein Eintrag. Für den Versand nutzen wir den Dienst Resend (Plus Five Five, Inc., USA). Dabei werden deine E-Mail-Adresse und deine Sprache in die USA übermittelt. Der Anbieter ist nach dem EU-US Data Privacy Framework zertifiziert, zusätzlich gelten Standardvertragsklauseln. Mit dem Anbieter besteht ein Auftragsverarbeitungsvertrag (Art. 28 DSGVO). Den Zeitpunkt der Bestätigung speichern wir als Nachweis deiner Einwilligung. Einträge ohne Bestätigung löschen wir nach 7 Tagen automatisch. Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO) sowie unser berechtigtes Interesse, Missbrauch zu verhindern (Art. 6 Abs. 1 lit. f DSGVO)."
     }
   },
   "humanCheck": {
@@ -136,5 +142,19 @@
     "email_not_allowed": "Bitte verwende deine echte E-Mail-Adresse, keine Wegwerfadresse.",
     "invalid": "Eine Angabe ist ungültig. Bitte prüfe deine Eingaben.",
     "unknown": "Etwas ist schiefgelaufen. Bitte versuch es gleich noch einmal."
+  },
+  "confirm": {
+    "title": "E-Mail-Adresse bestätigen",
+    "text": "Noch ein Klick, dann bist du auf der FixFlix Warteliste.",
+    "button": "Jetzt bestätigen",
+    "busy": "Wird bestätigt …",
+    "confirmedTitle": "Du bist auf der Liste!",
+    "confirmedText": "Danke! Deine E-Mail-Adresse ist bestätigt. Wir melden uns, sobald FixFlix in deiner Region startet.",
+    "already_confirmedTitle": "Schon erledigt",
+    "already_confirmedText": "Deine E-Mail-Adresse ist bereits bestätigt. Du bist auf der Liste.",
+    "expiredTitle": "Link abgelaufen",
+    "expiredText": "Dieser Link ist nicht mehr gültig. Trag dich einfach noch einmal ein, dann schicken wir dir einen neuen.",
+    "invalidTitle": "Link ungültig",
+    "invalidText": "Dieser Link funktioniert nicht. Vielleicht wurde er nicht vollständig kopiert, oder du hast dich inzwischen noch einmal eingetragen. Dann gilt nur der Link aus der neuesten Mail."
   }
 }

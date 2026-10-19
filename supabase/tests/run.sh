@@ -53,6 +53,16 @@ SQL
   else
     sql -d "$db" -q -c 'revoke all on schema public from public;' >/dev/null
   fi
+  # Stand-ins for Supabase's pg_net and Vault: mails are recorded, not sent.
+  sql -d "$db" -v ON_ERROR_STOP=1 >/dev/null <<'SQL'
+create schema net;
+create table net.sent (id bigserial primary key, url text, body jsonb, headers jsonb);
+create function net.http_post(url text, body jsonb default '{}', params jsonb default '{}',
+                              headers jsonb default '{}', timeout_milliseconds integer default 5000)
+returns bigint language sql as $$ insert into net.sent (url, body, headers) values ($1, $2, $4) returning id $$;
+create schema vault;
+create table vault.decrypted_secrets (name text, decrypted_secret text);
+SQL
   sql -d "$db" -v ON_ERROR_STOP=1 < "$here/../schema.sql" 2>&1 | grep -v '^NOTICE' || true
   # Second run must be harmless: people re-run scripts in the SQL editor.
   sql -d "$db" -v ON_ERROR_STOP=1 < "$here/../schema.sql" 2>&1 | grep -v '^NOTICE' || true

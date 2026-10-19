@@ -1,23 +1,40 @@
--- FixFlix demand test — run once in the Supabase SQL editor on a fresh project.
+-- FixFlix demand test — paste into the Supabase SQL editor and run. Safe to
+-- run again after every update: it only adds what is missing and replaces
+-- functions and views; your sign-ups, limits and secrets stay untouched.
 --
 -- Security model. The anon key ships inside the website bundle, so anybody can
 -- call the API without ever opening the site. Therefore:
---   * visitors have NO table privileges at all — they may only call three
---     functions (get_challenge, submit_lead, log_event);
+--   * visitors have NO table privileges at all — they may only call four
+--     functions (get_challenge, submit_lead, confirm_lead, log_event);
 --   * those functions validate and sanitise every field, apply per-IP and
 --     global rate limits, and require a proof-of-work solved by the
 --     "I am not a robot" checkbox before a lead is stored;
+--   * once a mail service is configured (see private.settings), a sign-up only
+--     counts after the address owner clicked the link in a confirmation mail;
 --   * limits and secrets live in schema `private`, which no API role can reach.
 -- Only you (SQL editor / dashboard = postgres role) can read the data.
 
 create schema if not exists extensions;
 create extension if not exists pgcrypto with schema extensions;
 
+-- pg_net sends the confirmation mails, pg_cron runs the daily clean-up. Both
+-- ship with Supabase; elsewhere (local tests) the script works without them.
+do $$
+begin
+  if exists (select 1 from pg_available_extensions where name = 'pg_net') then
+    create extension if not exists pg_net with schema extensions;
+  end if;
+  if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
+    create extension if not exists pg_cron;
+  end if;
+end
+$$;
+
 create schema if not exists private;
 revoke all on schema private from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
--- Private helpers: config, secrets, counters
+-- Private helpers: config, settings, secrets, counters
 -- ---------------------------------------------------------------------------
 
 -- Tune any limit with:  update private.config set value = 10 where key = 'lead_per_ip_hour';
@@ -32,9 +49,32 @@ insert into private.config (key, value) values
   ('lead_global_day',       2000),   -- … and per day
   ('challenge_per_ip_hour', 30),     -- "I am not a robot" attempts per connection and hour
   ('event_per_ip_minute',   40),     -- page-view/funnel counters per connection and minute
+  ('event_per_ip_day',      400),    -- … and per day, so one connection cannot fill the daily ceiling
   ('event_global_day',      20000),  -- ceiling that keeps the free 500 MB database from filling up
   ('pow_max_number',        100000), -- proof-of-work effort: ~0.5-2 s in a phone browser
-  ('challenge_ttl_seconds', 900)     -- how long a solved checkbox stays valid
+  ('challenge_ttl_seconds', 900),    -- how long a solved checkbox stays valid
+  ('confirm_per_ip_hour',   30),     -- confirmation-link clicks per connection and hour
+  ('confirm_days',          7),      -- confirmation links expire, unconfirmed sign-ups are deleted
+  ('mail_per_address_day',  3),      -- confirmation mails to one address per day (no inbox flooding)
+  ('mail_global_day',       250),    -- stay below the mail service's free daily quota
+  ('lead_retention_months', 24)      -- the privacy policy promises deletion after 24 months
+on conflict (key) do nothing;
+
+-- Text settings. Turn on confirmation mails once the mail service is set up:
+--   select vault.create_secret('<API key>', 'mail_api_key');
+--   update private.settings set value = 'brevo' where key = 'mail_provider';   -- or 'resend'
+create table if not exists private.settings (
+  key   text primary key,
+  value text not null
+);
+
+insert into private.settings (key, value) values
+  ('mail_provider',     ''),  -- '' = no mails, sign-ups count at once; 'brevo' or 'resend'
+  ('site_url',          'https://fixflix.space'),
+  ('mail_from_name',    'FixFlix'),
+  ('mail_from_address', 'hallo@fixflix.space'),
+  ('mail_reply_to',     'kontakt@fixflix.space'),
+  ('mail_operator',     'Laurenz Hofer · Berg 112 · 83734 Hausham')
 on conflict (key) do nothing;
 
 create table if not exists private.secrets (
@@ -91,26 +131,45 @@ as $$
 $$;
 
 create table if not exists public.leads (
-  id               uuid primary key default gen_random_uuid(),
-  created_at       timestamptz not null default now(),
-  role             text not null check (role in ('seeker', 'helper')),
-  email            text not null check (private.valid_email(email)),
-  postal_code      text not null check (postal_code ~ '^\d{5}$'),
-  locale           text not null default 'de' check (locale in ('de', 'en')),
-  categories       text[] not null check (
-                     cardinality(categories) between 1 and 7
-                     and categories <@ array['assemble', 'repair', 'mount', 'paint', 'garden', 'transport', 'household']
-                   ),
-  description      text check (char_length(description) <= 501),
-  experience_level text check (experience_level in ('hobby', 'advanced', 'pro')),
-  wants_app        boolean not null,
-  source           text check (source ~ '^[a-z0-9._:\-]{1,40}$'),
+  id                 uuid primary key default gen_random_uuid(),
+  created_at         timestamptz not null default now(),
+  role               text not null check (role in ('seeker', 'helper')),
+  email              text not null check (private.valid_email(email)),
+  postal_code        text not null check (postal_code ~ '^\d{5}$'),
+  locale             text not null default 'de' check (locale in ('de', 'en')),
+  categories         text[] not null check (
+                       cardinality(categories) between 1 and 7
+                       and categories <@ array['assemble', 'repair', 'mount', 'paint', 'garden', 'transport', 'household']
+                     ),
+  description        text check (char_length(description) <= 501),
+  experience_level   text check (experience_level in ('hobby', 'advanced', 'pro')),
+  wants_app          boolean not null,
+  source             text check (source ~ '^[a-z0-9._:\-]{1,40}$'),
+  confirmed_at       timestamptz,
+  confirm_token_hash text,
+  confirm_sent_at    timestamptz,
   check (role = 'seeker' or experience_level is not null)
 );
+
+-- Upgrade for projects created before e-mail confirmation existed: their
+-- sign-ups were never asked to confirm, so they keep counting.
+do $$
+begin
+  if not exists (select 1 from information_schema.columns
+                 where table_schema = 'public' and table_name = 'leads' and column_name = 'confirmed_at') then
+    alter table public.leads add column confirmed_at timestamptz;
+    update public.leads set confirmed_at = created_at;
+  end if;
+end
+$$;
+alter table public.leads add column if not exists confirm_token_hash text;
+alter table public.leads add column if not exists confirm_sent_at timestamptz;
 
 -- One signup per email and role; duplicates are accepted silently by submit_lead.
 create unique index if not exists leads_email_role_key on public.leads (lower(email), role);
 create index if not exists leads_created_idx on public.leads (created_at);
+create unique index if not exists leads_confirm_token_key on public.leads (confirm_token_hash)
+  where confirm_token_hash is not null;
 
 create table if not exists public.events (
   id         uuid primary key default gen_random_uuid(),
@@ -136,24 +195,45 @@ create or replace function private.cfg(p_key text) returns bigint
 language sql stable security definer set search_path = ''
 as $$ select value from private.config where key = p_key $$;
 
+create or replace function private.setting(p_key text) returns text
+language sql stable security definer set search_path = ''
+as $$ select coalesce((select value from private.settings where key = p_key), '') $$;
+
 -- Pseudonymous, daily-rotating fingerprint of the caller's connection. Supabase
 -- sits behind Cloudflare, which sets cf-connecting-ip itself, so clients cannot forge it.
+-- IPv6 users get a whole /64 network from their provider, so that is what counts as
+-- one connection — otherwise one household could pose as billions of visitors.
 create or replace function private.client_ip_hash() returns text
 language plpgsql security definer set search_path = ''
 as $$
 declare
   v_headers jsonb := coalesce(nullif(current_setting('request.headers', true), '')::jsonb, '{}'::jsonb);
-  v_ip text := coalesce(
+  v_raw text := coalesce(
     nullif(btrim(v_headers ->> 'cf-connecting-ip'), ''),
-    nullif(btrim(split_part(coalesce(v_headers ->> 'x-forwarded-for', ''), ',', 1)), ''),
-    'unknown'
+    nullif(btrim(split_part(coalesce(v_headers ->> 'x-forwarded-for', ''), ',', 1)), '')
   );
+  v_ip text;
 begin
+  begin
+    v_ip := case when family(v_raw::inet) = 6 then network(set_masklen(v_raw::inet, 64))::text
+                 else host(v_raw::inet) end;
+  exception when others then
+    v_ip := null;
+  end;
+
   return encode(
-    extensions.hmac(v_ip || ':' || current_date::text, (select value from private.secrets where name = 'ip_salt'), 'sha256'),
+    extensions.hmac(coalesce(v_ip, 'unknown') || ':' || current_date::text,
+                    (select value from private.secrets where name = 'ip_salt'), 'sha256'),
     'hex'
   );
 end
+$$;
+
+-- Lets the mail limit recognise an address without storing it in the counters.
+create or replace function private.email_hash(p_email text) returns text
+language sql stable security definer set search_path = ''
+as $$
+  select encode(extensions.hmac(lower(p_email), (select value from private.secrets where name = 'ip_salt'), 'sha256'), 'hex')
 $$;
 
 -- Counts one hit in the current window; false once the limit is exceeded.
@@ -246,6 +326,91 @@ begin
 end
 $$;
 
+-- The API key lives encrypted in Supabase Vault, never in this file or a table.
+create or replace function private.mail_api_key() returns text
+language plpgsql stable security definer set search_path = ''
+as $$
+declare
+  v_key text;
+begin
+  if to_regclass('vault.decrypted_secrets') is null then
+    return null;
+  end if;
+  execute 'select decrypted_secret from vault.decrypted_secrets where name = $1 limit 1'
+    into v_key using 'mail_api_key';
+  return nullif(btrim(v_key), '');
+end
+$$;
+
+-- Confirmation is on only when every piece is in place; until then sign-ups count at once.
+create or replace function private.mail_enabled() returns boolean
+language sql stable security definer set search_path = ''
+as $$
+  select private.setting('mail_provider') in ('brevo', 'resend')
+     and to_regprocedure('net.http_post(text, jsonb, jsonb, jsonb, integer)') is not null
+     and private.mail_api_key() is not null
+$$;
+
+-- Queues the confirmation mail (pg_net sends it right after the sign-up commits).
+-- The text is fixed: nothing a visitor typed ends up in the mail, so the form
+-- cannot be used to send spam or phishing to strangers.
+create or replace function private.send_confirmation(p_email text, p_locale text, p_token text) returns void
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_provider text := private.setting('mail_provider');
+  v_site     text := private.setting('site_url');
+  v_link     text := private.setting('site_url') || '/bestaetigen#' || p_token;
+  v_days     int  := private.cfg('confirm_days');
+  v_from     text := private.setting('mail_from_address');
+  v_name     text := private.setting('mail_from_name');
+  v_reply    text := private.setting('mail_reply_to');
+  v_footer   text := private.setting('mail_operator');
+  v_subject  text;
+  v_text     text;
+  v_html     text;
+begin
+  if not private.bump('mail:' || private.email_hash(p_email), 'day', private.cfg('mail_per_address_day'))
+     or not private.bump('mail_global_day', 'day', private.cfg('mail_global_day')) then
+    return;
+  end if;
+
+  if p_locale = 'en' then
+    v_subject := 'Please confirm your FixFlix sign-up';
+    v_text := format(E'Hi,\n\nthanks for your interest in FixFlix! Please confirm your email address so we can add you to the waitlist:\n\n%s\n\nThe link is valid for %s days. If you did not sign up yourself, just ignore this email and your address will be deleted automatically.\n\nBest regards\nFixFlix\n\n%s · %s/impressum', v_link, v_days, v_footer, v_site);
+    v_html := format('<p>Hi,</p><p>thanks for your interest in FixFlix! Please confirm your email address so we can add you to the waitlist:</p><p><a href="%s" style="display:inline-block;padding:12px 24px;border-radius:999px;background:#f97316;color:#fff;font-weight:bold;text-decoration:none">Confirm email address</a></p><p>The link is valid for %s days. If you did not sign up yourself, just ignore this email and your address will be deleted automatically.</p><p>Best regards<br>FixFlix</p><p style="color:#888;font-size:12px">%s · <a href="%s/impressum">Legal notice</a></p>', v_link, v_days, v_footer, v_site);
+  else
+    v_subject := 'Bitte bestätige deine Anmeldung bei FixFlix';
+    v_text := format(E'Hallo,\n\ndanke für dein Interesse an FixFlix! Bitte bestätige deine E-Mail-Adresse, damit wir dich auf die Warteliste setzen können:\n\n%s\n\nDer Link ist %s Tage gültig. Falls du dich nicht selbst eingetragen hast, ignoriere diese Mail einfach. Deine Adresse wird dann automatisch gelöscht.\n\nViele Grüße\nFixFlix\n\n%s · %s/impressum', v_link, v_days, v_footer, v_site);
+    v_html := format('<p>Hallo,</p><p>danke für dein Interesse an FixFlix! Bitte bestätige deine E-Mail-Adresse, damit wir dich auf die Warteliste setzen können:</p><p><a href="%s" style="display:inline-block;padding:12px 24px;border-radius:999px;background:#f97316;color:#fff;font-weight:bold;text-decoration:none">E-Mail-Adresse bestätigen</a></p><p>Der Link ist %s Tage gültig. Falls du dich nicht selbst eingetragen hast, ignoriere diese Mail einfach. Deine Adresse wird dann automatisch gelöscht.</p><p>Viele Grüße<br>FixFlix</p><p style="color:#888;font-size:12px">%s · <a href="%s/impressum">Impressum</a></p>', v_link, v_days, v_footer, v_site);
+  end if;
+
+  if v_provider = 'brevo' then
+    perform net.http_post(
+      url := 'https://api.brevo.com/v3/smtp/email',
+      body := jsonb_build_object(
+        'sender', jsonb_build_object('name', v_name, 'email', v_from),
+        'to', jsonb_build_array(jsonb_build_object('email', p_email)),
+        'replyTo', jsonb_build_object('email', v_reply),
+        'subject', v_subject, 'textContent', v_text, 'htmlContent', v_html),
+      params := '{}'::jsonb,
+      headers := jsonb_build_object('api-key', private.mail_api_key(), 'Content-Type', 'application/json', 'Accept', 'application/json'),
+      timeout_milliseconds := 10000);
+  elsif v_provider = 'resend' then
+    perform net.http_post(
+      url := 'https://api.resend.com/emails',
+      body := jsonb_build_object(
+        'from', v_name || ' <' || v_from || '>',
+        'to', jsonb_build_array(p_email),
+        'reply_to', v_reply,
+        'subject', v_subject, 'text', v_text, 'html', v_html),
+      params := '{}'::jsonb,
+      headers := jsonb_build_object('Authorization', 'Bearer ' || private.mail_api_key(), 'Content-Type', 'application/json'),
+      timeout_milliseconds := 10000);
+  end if;
+end
+$$;
+
 create or replace function private.purge() returns void
 language plpgsql security definer set search_path = ''
 as $$
@@ -254,6 +419,21 @@ begin
   delete from private.used_challenges where used_at < now() - interval '1 day';
   delete from public.events
    where id in (select id from public.events where created_at < now() - interval '180 days' limit 1000);
+  -- Never confirmed: the address may not even belong to whoever typed it in.
+  delete from public.leads
+   where confirmed_at is null
+     and coalesce(confirm_sent_at, created_at) < now() - make_interval(days => private.cfg('confirm_days')::int);
+  delete from public.leads
+   where created_at < now() - make_interval(months => private.cfg('lead_retention_months')::int);
+end
+$$;
+
+-- Daily clean-up, independent of traffic (the random calls below are only a fallback).
+do $$
+begin
+  if to_regnamespace('cron') is not null then
+    perform cron.schedule('fixflix-purge', '17 3 * * *', 'select private.purge()');
+  end if;
 end
 $$;
 
@@ -305,10 +485,14 @@ create or replace function public.submit_lead(
 language plpgsql security definer set search_path = ''
 as $$
 declare
-  v_ip         text := private.client_ip_hash();
+  v_ip          text := private.client_ip_hash();
   v_email       text := lower(btrim(coalesce(p_email, '')));
+  v_locale      text := case when p_locale = 'en' then 'en' else 'de' end;
+  v_confirm     boolean := private.mail_enabled();
+  v_token       text;
   v_categories  text[];
   v_description text;
+  v_rows        integer;
 begin
   -- Limits first: a flood must not cost more than a counter update.
   if not private.bump('lead:' || v_ip, 'hour', private.cfg('lead_per_ip_hour')) then
@@ -350,27 +534,89 @@ begin
 
   select array_agg(distinct c order by c) into v_categories from unnest(p_categories) as c;
 
+  if v_confirm then
+    v_token := encode(extensions.gen_random_bytes(32), 'hex');
+  end if;
+
   insert into public.leads (
-    role, email, postal_code, locale, categories, description, experience_level, wants_app, source
+    role, email, postal_code, locale, categories, description, experience_level, wants_app, source,
+    confirmed_at, confirm_token_hash, confirm_sent_at
   ) values (
     p_role,
     v_email,
     p_postal_code,
-    case when p_locale = 'en' then 'en' else 'de' end,
+    v_locale,
     v_categories,
     v_description,
     case when p_role = 'helper' then p_experience_level end,
     p_wants_app,
-    private.clean_source(p_source)
+    private.clean_source(p_source),
+    case when v_confirm then null else now() end,
+    case when v_confirm then encode(extensions.digest(v_token, 'sha256'), 'hex') end,
+    case when v_confirm then now() end
   )
-  on conflict (lower(email), role) do nothing;
+  -- Signing up again before confirming replaces the answers and sends a fresh
+  -- link; a confirmed sign-up is never touched.
+  on conflict (lower(email), role) do update set
+    postal_code        = excluded.postal_code,
+    locale             = excluded.locale,
+    categories         = excluded.categories,
+    description        = excluded.description,
+    experience_level   = excluded.experience_level,
+    wants_app          = excluded.wants_app,
+    source             = excluded.source,
+    confirm_token_hash = excluded.confirm_token_hash,
+    confirm_sent_at    = excluded.confirm_sent_at
+  where public.leads.confirmed_at is null and excluded.confirm_token_hash is not null;
+  get diagnostics v_rows = row_count;
+
+  if v_confirm and v_rows = 1 then
+    perform private.send_confirmation(v_email, v_locale, v_token);
+  end if;
 
   if random() < 0.02 then
     perform private.purge();
   end if;
 
   -- Same answer for new and repeated addresses: nobody can probe who signed up.
-  return jsonb_build_object('ok', true);
+  return jsonb_build_object('ok', true, 'confirm', v_confirm);
+end
+$$;
+
+-- The link in the confirmation mail carries a random 256-bit token; only its
+-- hash is stored, so even a database leak reveals no working links. Bad links
+-- get a normal answer instead of an error: an error would roll back the
+-- rate-limit counter too, and guessing would never be throttled.
+create or replace function public.confirm_lead(p_token text) returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_hash      text;
+  v_confirmed boolean;
+begin
+  if not private.bump('confirm:' || private.client_ip_hash(), 'hour', private.cfg('confirm_per_ip_hour')) then
+    raise exception 'rate_limited' using errcode = 'PT429';
+  end if;
+  if p_token is null or p_token !~ '^[0-9a-f]{64}$' then
+    return jsonb_build_object('status', 'invalid');
+  end if;
+
+  v_hash := encode(extensions.digest(p_token, 'sha256'), 'hex');
+
+  update public.leads set confirmed_at = now()
+   where confirm_token_hash = v_hash
+     and confirmed_at is null
+     and confirm_sent_at > now() - make_interval(days => private.cfg('confirm_days')::int);
+  if found then
+    return jsonb_build_object('status', 'confirmed');
+  end if;
+
+  select confirmed_at is not null into v_confirmed from public.leads where confirm_token_hash = v_hash;
+  return jsonb_build_object('status', case
+    when v_confirmed is null then 'invalid'
+    when v_confirmed then 'already_confirmed'
+    else 'expired'
+  end);
 end
 $$;
 
@@ -385,6 +631,8 @@ create or replace function public.log_event(
 ) returns void
 language plpgsql security definer set search_path = ''
 as $$
+declare
+  v_ip text;
 begin
   if p_name is null or p_name not in (
        'pageview', 'funnel_start_seeker', 'funnel_start_helper',
@@ -392,11 +640,14 @@ begin
        'step_completed_helper_1', 'step_completed_helper_2',
        'waitlist_joined_seeker', 'waitlist_joined_helper'
      )
-     or p_path is null or p_path not in ('/', '/finden', '/helfen', '/erfolg', '/impressum', '/datenschutz') then
+     or p_path is null
+     or p_path not in ('/', '/finden', '/helfen', '/erfolg', '/bestaetigen', '/impressum', '/datenschutz') then
     return;
   end if;
 
-  if not private.bump('event:' || private.client_ip_hash(), 'minute', private.cfg('event_per_ip_minute'))
+  v_ip := private.client_ip_hash();
+  if not private.bump('event:' || v_ip, 'minute', private.cfg('event_per_ip_minute'))
+     or not private.bump('event_day:' || v_ip, 'day', private.cfg('event_per_ip_day'))
      or not private.bump('event_global_day', 'day', private.cfg('event_global_day')) then
     return;
   end if;
@@ -417,7 +668,7 @@ end
 $$;
 
 -- ---------------------------------------------------------------------------
--- Privileges: visitors get the three functions and nothing else
+-- Privileges: visitors get the four functions and nothing else
 -- ---------------------------------------------------------------------------
 
 -- Explicit on purpose: projects created since mid-2026 no longer expose
@@ -428,29 +679,40 @@ revoke all on all functions in schema public from public, anon, authenticated;
 
 grant execute on function public.get_challenge() to anon;
 grant execute on function public.submit_lead(text, text, text, text, text[], text, text, boolean, text, jsonb) to anon;
+grant execute on function public.confirm_lead(text) to anon;
 grant execute on function public.log_event(text, text, text, text, boolean) to anon;
 
 -- ---------------------------------------------------------------------------
 -- Reading the numbers (SQL editor):  select * from demand_overview;
--- security_invoker + revoked grants keep the views invisible to the anon key.
+-- Only confirmed sign-ups count. security_invoker + revoked grants keep the
+-- views invisible to the anon key.
 -- ---------------------------------------------------------------------------
 
-create or replace view public.demand_overview with (security_invoker = true) as
+drop view if exists
+  public.demand_overview, public.demand_conversion, public.demand_by_source, public.demand_by_category,
+  public.demand_by_region, public.demand_by_hour, public.limit_hits;
+
+create view public.demand_overview with (security_invoker = true) as
 select
-  count(*)                                                            as signups_total,
-  count(*) filter (where role = 'seeker')                             as seekers,
-  count(*) filter (where role = 'helper')                             as helpers,
-  count(*) filter (where wants_app)                                   as would_use_app,
-  round(100.0 * count(*) filter (where wants_app) / nullif(count(*), 0), 1) as would_use_app_pct,
-  min(created_at)                                                     as first_signup,
-  max(created_at)                                                     as last_signup
+  count(*) filter (where confirmed_at is not null)                    as signups_total,
+  count(*) filter (where confirmed_at is not null and role = 'seeker') as seekers,
+  count(*) filter (where confirmed_at is not null and role = 'helper') as helpers,
+  count(*) filter (where confirmed_at is not null and wants_app)      as would_use_app,
+  round(
+    100.0 * count(*) filter (where confirmed_at is not null and wants_app)
+    / nullif(count(*) filter (where confirmed_at is not null), 0),
+    1
+  )                                                                   as would_use_app_pct,
+  count(*) filter (where confirmed_at is null)                        as awaiting_confirmation,
+  min(created_at) filter (where confirmed_at is not null)             as first_signup,
+  max(created_at) filter (where confirmed_at is not null)             as last_signup
 from public.leads;
 
 -- visit_to_signup_pct is only meaningful while visitors arrive via "/"; links
 -- pointing straight at /finden or /helfen skip the landing count, so judge
 -- those by the *_completion_pct columns instead. Events are low-trust
 -- counters; the leads behind demand_overview are the numbers to rely on.
-create or replace view public.demand_conversion with (security_invoker = true) as
+create view public.demand_conversion with (security_invoker = true) as
 select
   count(*) filter (where name = 'pageview' and path = '/')            as landing_visits,
   count(*) filter (where name = 'funnel_start_seeker')                as seeker_started,
@@ -474,31 +736,64 @@ select
   )                                                                   as visit_to_signup_pct
 from public.events;
 
-create or replace view public.demand_by_source with (security_invoker = true) as
+create view public.demand_by_source with (security_invoker = true) as
 select coalesce(source, 'direct') as source, count(*) as signups
 from public.leads
+where confirmed_at is not null
 group by 1
 order by signups desc;
 
-create or replace view public.demand_by_category with (security_invoker = true) as
+create view public.demand_by_category with (security_invoker = true) as
 select category, role, count(*) as signups
 from public.leads, unnest(categories) as category
+where confirmed_at is not null
 group by category, role
 order by signups desc;
 
-create or replace view public.demand_by_region with (security_invoker = true) as
+create view public.demand_by_region with (security_invoker = true) as
 select left(postal_code, 2) as plz_region, role, count(*) as signups
 from public.leads
+where confirmed_at is not null
 group by 1, 2
 order by signups desc;
 
--- Bursts stand out here: genuine interest grows over days, spam arrives in one hour.
-create or replace view public.demand_by_hour with (security_invoker = true) as
-select date_trunc('hour', created_at) as hour, count(*) as signups
+-- Bursts stand out here: genuine interest grows over days, spam arrives in one
+-- hour — and mostly never confirms.
+create view public.demand_by_hour with (security_invoker = true) as
+select
+  date_trunc('hour', created_at)               as hour,
+  count(*)                                     as attempts,
+  count(*) filter (where confirmed_at is not null) as confirmed
 from public.leads
 where created_at > now() - interval '48 hours'
 group by 1
 order by 1 desc;
+
+-- Which limits fired in the last two days and how many requests they turned
+-- away. Empty is good; a busy row means someone is hammering the site.
+create view public.limit_hits with (security_invoker = true) as
+select
+  m.label                                   as limit_name,
+  c.window_start,
+  count(*)                                  as connections,
+  sum(c.n - cfg.value)                      as rejected
+from private.counters c
+join (values
+  ('lead',             'lead_per_ip_hour',      'sign-ups per connection'),
+  ('lead_global_hour', 'lead_global_hour',      'sign-ups in total per hour'),
+  ('lead_global_day',  'lead_global_day',       'sign-ups in total per day'),
+  ('challenge',        'challenge_per_ip_hour', 'robot checks per connection'),
+  ('confirm',          'confirm_per_ip_hour',   'confirmation clicks per connection'),
+  ('mail',             'mail_per_address_day',  'mails per address'),
+  ('mail_global_day',  'mail_global_day',       'mails in total per day'),
+  ('event',            'event_per_ip_minute',   'page counters per connection and minute'),
+  ('event_day',        'event_per_ip_day',      'page counters per connection and day'),
+  ('event_global_day', 'event_global_day',      'page counters in total per day')
+) as m(prefix, config_key, label) on m.prefix = split_part(c.bucket, ':', 1)
+join private.config cfg on cfg.key = m.config_key
+where c.n > cfg.value
+group by 1, 2
+order by 2 desc, 4 desc;
 
 revoke all on
   public.demand_overview,
@@ -506,5 +801,6 @@ revoke all on
   public.demand_by_source,
   public.demand_by_category,
   public.demand_by_region,
-  public.demand_by_hour
+  public.demand_by_hour,
+  public.limit_hits
 from anon, authenticated;

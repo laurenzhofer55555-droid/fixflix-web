@@ -20,14 +20,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
           cache: npm
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
         id: pages
 
       - run: npm ci
@@ -39,7 +39,7 @@ jobs:
         env:
           # "" with a custom domain, "/<repo>" for <user>.github.io/<repo>.
           VITE_BASE: ${{ steps.pages.outputs.base_path }}/
-          # Public by design — the database only exposes three guarded functions.
+          # Public by design: the database only exposes four guarded functions.
           # Set both under Settings → Secrets and variables → Actions → Variables.
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
@@ -63,8 +63,16 @@ jobs:
             -X POST "${SUPABASE_URL%/}/rest/v1/rpc/get_challenge" \
             -H "apikey: $SUPABASE_KEY" -H "Content-Type: application/json" -d '{}' || true)
           case "$status" in
-            200) grep -q '"challenge"' body.json && exit 0
-                 echo "::error::Supabase answered, but not with a puzzle. Run supabase/schema.sql again." ;;
+            200) if ! grep -q '"challenge"' body.json; then
+                   echo "::error::Supabase answered, but not with a puzzle. Run supabase/schema.sql again."
+                   exit 1
+                 fi
+                 # The site links to /bestaetigen, which needs the matching database version.
+                 confirm=$(curl --silent --output confirm.json --write-out '%{http_code}' --max-time 20 \
+                   -X POST "${SUPABASE_URL%/}/rest/v1/rpc/confirm_lead" \
+                   -H "apikey: $SUPABASE_KEY" -H "Content-Type: application/json" -d '{"p_token":"x"}' || true)
+                 [ "$confirm" = 200 ] && exit 0
+                 echo "::error::The database is older than this site (confirm_lead answered HTTP $confirm). Run supabase/schema.sql again." ;;
             401|403) echo "::error::Supabase rejected VITE_SUPABASE_ANON_KEY. Copy the publishable (or anon) key again." ;;
             404) echo "::error::Function get_challenge not found. Run supabase/schema.sql in the Supabase SQL editor." ;;
             000) echo "::error::Could not reach $SUPABASE_URL. Check VITE_SUPABASE_URL." ;;
@@ -72,7 +80,7 @@ jobs:
           esac
           exit 1
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
           path: dist
 
@@ -84,4 +92,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

@@ -24,10 +24,14 @@ privaten Hauptprojekt; `scripts/export-site.sh` kopiert nur die Website heraus.
 2. **New project**: Name `fixflix`, Datenbank-Passwort erzeugen lassen und im Passwort-Manager
    speichern, Region **Central EU (Frankfurt)**. Falls das Formular Data-API-Optionen zeigt: Data API
    **an**, Schema `public`. „Automatically expose new tables" darf aus bleiben — das Skript gibt
-   Besuchern ausdrücklich nur die drei Funktionen frei. Warten, bis das Projekt bereit ist (1–2 Minuten).
+   Besuchern ausdrücklich nur die vier Funktionen frei. Warten, bis das Projekt bereit ist (1–2 Minuten).
 3. **SQL Editor** → neue Abfrage → kompletten Inhalt von [`supabase/schema.sql`](../supabase/schema.sql)
-   einfügen → **Run**. Warnt Supabase vor „destructive operations", bestätigen: Das Skript entzieht
-   Besuchern nur Rechte und löscht keine Daten. Ein zweiter Lauf schadet nicht.
+   einfügen → **Run**. Warnt Supabase vor „destructive operations", **Run without RLS** wählen: Das
+   Skript entzieht Besuchern nur Rechte, legt die Auswertungen neu an und löscht keine Anmeldungen.
+   Nach jedem Update der Website dasselbe noch einmal tun; ein erneuter Lauf schadet nie. Der
+   Deploy-Workflow verweigert die Veröffentlichung, solange die Datenbank älter ist als die Website.
+6. **Authentication → Sign In / Providers → „Allow new users to sign up" aus**. Die Seite braucht
+   keine Benutzerkonten; offen ließe sich der Mailversand des Projekts missbrauchen.
 4. Oben **Connect** (oder **Project Settings → API Keys**): *Project URL* und den *publishable* Key
    (`sb_publishable_…`, alt: *anon public* `eyJ…`) kopieren. Beides ist öffentlich gedacht. Den
    *secret*-Key (`sb_secret_…`/`service_role`) niemals in die Website eintragen.
@@ -106,13 +110,17 @@ Der Build erkennt die Domain automatisch, es ist nichts im Code anzupassen.
 Supabase → **SQL Editor**:
 
 ```sql
-select * from demand_overview;      -- Anmeldungen gesamt, Kunden/Helfer, "würde App nutzen" in %
+select * from demand_overview;      -- bestätigte Anmeldungen, Kunden/Helfer, "würde App nutzen" in %, offene Bestätigungen
 select * from demand_conversion;    -- Besuche → Funnel-Start → Anmeldung, Abschlussquoten
 select * from demand_by_source;     -- welcher Kanal bringt Anmeldungen (utm_source)
 select * from demand_by_category;   -- welche Tätigkeiten gefragt/angeboten werden
 select * from demand_by_region;     -- PLZ-Regionen (erste 2 Ziffern)
-select * from demand_by_hour;       -- Anmeldungen pro Stunde, letzte 48 h (Spam fällt als Spitze auf)
+select * from demand_by_hour;       -- Versuche und Bestätigungen pro Stunde, letzte 48 h (Spam fällt als Spitze auf)
+select * from limit_hits;           -- welche Schutzgrenzen in den letzten 48 h gegriffen haben (leer = ruhig)
 ```
+
+Sobald die Bestätigungsmail an ist (Abschnitt 7a), zählen in allen Auswertungen nur Adressen,
+deren Besitzer auf den Link geklickt haben.
 
 Einzelne Einträge: **Table Editor → leads**, CSV-Export dort per Knopfdruck. Freitexte, die mit
 `=`, `+`, `-` oder `@` beginnen, bekommen ein vorangestelltes `'`, damit Excel sie nicht als Formel ausführt.
@@ -135,16 +143,20 @@ stattfände, ließe sich also umgehen. Deshalb sitzen alle verbindlichen Regeln 
 
 | Angriff | Schutz |
 |---|---|
-| Daten mit dem öffentlichen Schlüssel lesen, ändern, löschen | Besucher haben keinerlei Rechte auf Tabellen und Auswertungen. Erreichbar sind nur drei Funktionen: Puzzle holen, Anmeldung abgeben, Besuch zählen. |
-| Massenhaft Anmeldungen per Skript | Höchstens 5 pro Internetanschluss und Stunde, 300 pro Stunde und 2.000 pro Tag insgesamt. Jede Anmeldung braucht ein frisch gelöstes Puzzle, das nur einmal und nur 15 Minuten gilt. |
+| Daten mit dem öffentlichen Schlüssel lesen, ändern, löschen | Besucher haben keinerlei Rechte auf Tabellen und Auswertungen. Erreichbar sind nur vier Funktionen: Puzzle holen, Anmeldung abgeben, Link bestätigen, Besuch zählen. Benutzerkonten lassen sich nicht anlegen. |
+| Fremde Adressen eintragen | Bestätigungsmail (Double Opt-in, Abschnitt 7a): Erst der Klick auf den Link zählt. Unbestätigte Einträge verschwinden nach 7 Tagen. Der Link enthält 256 Bit Zufall, gespeichert wird nur sein Hash, Rateversuche sind auf 30 pro Stunde und Anschluss begrenzt. |
+| Das Formular als Mail-Kanone gegen Dritte benutzen | Höchstens 3 Mails pro Adresse und Tag, 250 insgesamt. Der Mailtext ist fest, nichts aus dem Formular landet darin. |
+| Massenhaft Anmeldungen per Skript | Höchstens 5 pro Internetanschluss und Stunde (bei IPv6 zählt das ganze /64-Netz eines Haushalts als ein Anschluss), 300 pro Stunde und 2.000 pro Tag insgesamt. Jede Anmeldung braucht ein frisch gelöstes Puzzle, das nur einmal und nur 15 Minuten gilt. |
 | Formular-Bots | „Ich bin kein Roboter"-Haken (Rechenaufgabe im Browser, ohne Drittanbieter, ohne Cookies), unsichtbares Fangfeld, Mindestzeit auf dem letzten Schritt. |
 | Kaputte oder bösartige Eingaben (SQL, HTML/Script, Excel-Formeln, Riesen-Texte, falsche Typen) | Jedes Feld wird in der Datenbank geprüft: E-Mail-Format, Postleitzahl, nur die 7 erlaubten Tätigkeiten, Texte bereinigt und auf 500 Zeichen begrenzt, Quelle auf Buchstaben/Ziffern reduziert. |
 | Wegwerf-Adressen | Sperrliste in `private.blocked_domains`, erweiterbar. |
-| Gefälschte Besuchszahlen, Datenbank volllaufen lassen | Nur bekannte Ereignisse und Seiten werden gezählt, höchstens 40 pro Anschluss und Minute und 20.000 pro Tag; Ereignisse älter als 180 Tage werden gelöscht. |
+| Gefälschte Besuchszahlen, Datenbank volllaufen lassen | Nur bekannte Ereignisse und Seiten werden gezählt, höchstens 40 pro Anschluss und Minute, 400 pro Anschluss und Tag und 20.000 pro Tag insgesamt; Ereignisse älter als 180 Tage werden gelöscht. |
+| Eingeschleuster Code im Browser, Einbetten in fremde Seiten | Content Security Policy im Seitenkopf: Die Seite lädt nur eigene Dateien und spricht nur mit Supabase. In fremden Frames zeigt sie nur einen Link. |
+| Daten länger behalten als versprochen | Ein täglicher Job (pg_cron, 03:17 Uhr) löscht Anmeldungen nach 24 Monaten und unbestätigte nach 7 Tagen. |
 | Projekt schläft ein | Supabase pausiert Gratis-Projekte nach einer Woche ohne Zugriff; der Workflow „Keep Supabase awake" ruft alle drei Tage einmal an. |
 
-Getestet mit `supabase/tests/run.sh` (braucht Docker): 73 Angriffe direkt in SQL und 28 über die
-echte API-Schicht, die Supabase verwendet. Nach jeder Änderung an `schema.sql` erneut laufen lassen.
+Getestet mit `supabase/tests/run.sh` (braucht Docker): 122 Prüfungen direkt in SQL (zweimal, mit alten
+und neuen Supabase-Voreinstellungen) und 39 über die echte API-Schicht, die Supabase verwendet. Nach jeder Änderung an `schema.sql` erneut laufen lassen.
 
 **Was der Schutz nicht leistet:**
 
@@ -152,9 +164,10 @@ echte API-Schicht, die Supabase verwendet. Nach jeder Änderung an `schema.sql` 
   Bots ab; gegen gezielte Angriffe wirken die Obergrenzen.
 - Wer viele verschiedene Internetanschlüsse kontrolliert, kann bis zur Obergrenze (300 pro Stunde)
   Einträge erzeugen und echte Anmeldungen in dieser Stunde mit „gerade ist viel los" abweisen lassen.
-  Für eine Test-Seite ist das unwahrscheinlich. Die wirksame nächste Stufe ist eine Bestätigungs-Mail
-  (Double-Opt-In): Dann zählen nur Adressen, deren Besitzer geklickt haben. Mit der eigenen Domain ist
-  das jetzt umsetzbar.
+  Mit Bestätigungsmail zählen solche Einträge nicht mehr, sie können aber weiterhin die Obergrenze
+  füllen. `limit_hits` zeigt, wenn das passiert.
+- GitHub Pages kann keine echten HTTP-Header setzen. HSTS (Browser erzwingt dauerhaft HTTPS) fehlt
+  deshalb; die Weiterleitung von http auf https funktioniert trotzdem.
 - Überlastungsangriffe auf die Server selbst fangen GitHub und Supabase auf Plattformebene ab, nicht dieses Projekt.
 
 **Limits anpassen und Auffälligkeiten prüfen** (SQL Editor):
@@ -162,11 +175,32 @@ echte API-Schicht, die Supabase verwendet. Nach jeder Änderung an `schema.sql` 
 ```sql
 update private.config set value = 10 where key = 'lead_per_ip_hour';   -- z. B. bei Messe-WLAN
 insert into private.blocked_domains values ('spamdomain.example');
-select bucket, window_start, n from private.counters where n > 20 order by n desc limit 20;
+select * from limit_hits;                                              -- gegriffene Schutzgrenzen
 delete from public.leads where email like '%@spamdomain.example';     -- Müll nachträglich entfernen
 ```
 
 Die Zähler enthalten nur einen täglich wechselnden Hash der IP-Adresse und werden nach 48 Stunden gelöscht.
+
+## 7a. Bestätigungsmail einschalten (Double Opt-in)
+
+Bis hierhin zählt jede Anmeldung sofort. Für die Bestätigungsmail braucht es einen Versanddienst:
+**Brevo** (EU, 300 Mails/Tag gratis) oder **Resend** (USA, 100 Mails/Tag gratis). Die Datenbank kann beide.
+
+1. Konto beim Dienst anlegen, Domain `fixflix.space` hinzufügen und die angezeigten DNS-Einträge
+   (DKIM, ggf. SPF/Return-Path) bei INWX eintragen, bis der Dienst die Domain als verifiziert zeigt.
+2. Beim Dienst einen API-Key erzeugen. In Supabase → **SQL Editor** (nur dort, nie in die Website):
+   ```sql
+   select vault.create_secret('<API-Key>', 'mail_api_key');            -- verschlüsselt im Vault
+   update private.settings set value = 'brevo' where key = 'mail_provider';   -- oder 'resend'
+   update private.settings set value = 'hallo@fixflix.space' where key = 'mail_from_address';
+   ```
+3. In `src/config/site.ts` `mailProvider: 'brevo'` (bzw. `'resend'`) setzen und neu
+   veröffentlichen: Damit erscheint der passende Abschnitt in der Datenschutzerklärung.
+4. Selbst einmal eintragen und den Link klicken. Kommt keine Mail an:
+   `select status_code, content from net._http_response order by created desc limit 5;`
+
+Ausschalten: `update private.settings set value = '' where key = 'mail_provider';` (dann zählen
+Anmeldungen wieder sofort; offene Bestätigungen verfallen nach 7 Tagen).
 
 ## 8. Wie belastbar sind die Zahlen?
 

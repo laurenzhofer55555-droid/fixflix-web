@@ -1,6 +1,6 @@
 /**
  * Operator details for the Impressum (§ 5 DDG) and the privacy policy.
- * German law requires real data here before the site is public — replace
+ * German law requires real data here before the site is public: replace
  * every TODO.
  */
 export const site = {
@@ -9,6 +9,8 @@ export const site = {
   city: '83734 Hausham',
   email: 'kontakt@fixflix.space',
   phone: '',
+  /** '' until confirmation mails are on; then 'brevo' or 'resend' (adds the privacy section). */
+  mailProvider: '' as '' | 'brevo' | 'resend',
 }
 
 export const siteIsConfigured = !Object.values(site).some((value) => value.startsWith('TODO'))

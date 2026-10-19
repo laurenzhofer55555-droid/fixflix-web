@@ -83,7 +83,10 @@
     "title": "You're on the list!",
     "seekerText": "Thank you! We'll get in touch as soon as FixFlix launches in your region.",
     "helperText": "Thank you! We'll let you know as soon as you can get started with FixFlix.",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "confirmTitle": "Almost there!",
+    "confirmText": "We've sent you an email. Please click the link inside, only then are you on the list.",
+    "confirmHint": "No email? Please check your spam folder too."
   },
   "footer": {
     "imprint": "Legal notice",
@@ -106,7 +109,7 @@
       "s3Title": "Waitlist",
       "s3Body": "When you join the waitlist we store your email address, postal code, selected activities, optionally your description or experience level, your answer on whether you would use the app, your language, where your visit came from (e.g. the source of the link) and the time of sign-up. The purpose is to inform you about the launch of FixFlix and to evaluate demand for the product. The legal basis is your consent (Art. 6(1)(a) GDPR), which you can withdraw at any time.",
       "s4Title": "Storage (Supabase)",
-      "s4Body": "Waitlist data is stored with Supabase (Supabase Inc.) in a database in the EU (Frankfurt). A data processing agreement (Art. 28 GDPR) is in place with the provider. We delete your data when you withdraw consent, and at the latest 24 months after sign-up.",
+      "s4Body": "Waitlist data is stored with Supabase (Supabase Inc.) in a database in the EU (Frankfurt). A data processing agreement (Art. 28 GDPR) is in place with the provider. We delete your data when you withdraw consent, and at the latest 24 months after sign-up. Deletion after 24 months happens automatically.",
       "s5Title": "Anonymous usage counts",
       "s5Body": "We count page views and steps in the sign-up flow to understand how many people are interested in FixFlix. Only the event, the page path, the language and where the visit came from are counted. No IP address, no device identifier, no cookies. The legal basis is our legitimate interest (Art. 6(1)(f) GDPR).",
       "s6Title": "Protection against abuse",
@@ -116,7 +119,10 @@
       "s8Title": "Contact by email",
       "s8Body": "If you write to us at {{email}}, your message is delivered via the forwarding service ImprovMX to a mailbox at Google (Gmail). We only use your details to answer your request and delete them once they are no longer needed for that. The legal basis is our legitimate interest in answering enquiries (Art. 6(1)(f) GDPR).",
       "s9Body": "You have the right to access, rectification, erasure, restriction of processing and data portability, as well as to object and to withdraw your consent. Write to us at {{email}}. You can also lodge a complaint with a data protection authority.",
-      "s9Title": "Your rights"
+      "s9Title": "Your rights",
+      "mailTitle": "Confirmation email",
+      "mailBody_brevo": "So that nobody can sign up with someone else's address, we send you an email with a confirmation link after you sign up (double opt-in). Your sign-up only counts after the click. For sending we use the service Brevo (Sendinblue SAS, Paris, France), which receives your email address and language for this purpose. A data processing agreement (Art. 28 GDPR) is in place with the provider. We store the time of confirmation as proof of your consent. Sign-ups that are not confirmed are deleted automatically after 7 days. The legal basis is your consent (Art. 6(1)(a) GDPR) and our legitimate interest in preventing abuse (Art. 6(1)(f) GDPR).",
+      "mailBody_resend": "So that nobody can sign up with someone else's address, we send you an email with a confirmation link after you sign up (double opt-in). Your sign-up only counts after the click. For sending we use the service Resend (Plus Five Five, Inc., USA). Your email address and language are transferred to the USA for this purpose. The provider is certified under the EU-US Data Privacy Framework, and standard contractual clauses apply as well. A data processing agreement (Art. 28 GDPR) is in place with the provider. We store the time of confirmation as proof of your consent. Sign-ups that are not confirmed are deleted automatically after 7 days. The legal basis is your consent (Art. 6(1)(a) GDPR) and our legitimate interest in preventing abuse (Art. 6(1)(f) GDPR)."
     }
   },
   "humanCheck": {
@@ -136,5 +142,19 @@
     "email_not_allowed": "Please use your real email address, not a disposable one.",
     "invalid": "One of your entries is invalid. Please check the form.",
     "unknown": "Something went wrong. Please try again in a moment."
+  },
+  "confirm": {
+    "title": "Confirm your email address",
+    "text": "One more click and you're on the FixFlix waitlist.",
+    "button": "Confirm now",
+    "busy": "Confirming …",
+    "confirmedTitle": "You're on the list!",
+    "confirmedText": "Thank you! Your email address is confirmed. We'll get in touch as soon as FixFlix launches in your area.",
+    "already_confirmedTitle": "Already done",
+    "already_confirmedText": "Your email address is already confirmed. You're on the list.",
+    "expiredTitle": "Link expired",
+    "expiredText": "This link is no longer valid. Just sign up again and we'll send you a new one.",
+    "invalidTitle": "Invalid link",
+    "invalidText": "This link doesn't work. Maybe it wasn't copied completely, or you have signed up again since. In that case only the link from the newest email works."
   }
 }

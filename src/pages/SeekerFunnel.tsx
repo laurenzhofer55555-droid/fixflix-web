@@ -64,7 +64,7 @@ export default function SeekerFunnel() {
     setBusy(true)
     setError(null)
     try {
-      await createLead({
+      const { confirm } = await createLead({
         role: 'seeker',
         email,
         postalCode: plz,
@@ -76,7 +76,7 @@ export default function SeekerFunnel() {
         proof: guard.proof,
       })
       track('waitlist_joined_seeker', { wants_app: wantsApp! })
-      navigate('/erfolg', { state: { role: 'seeker' } })
+      navigate('/erfolg', { state: { role: 'seeker', confirm } })
     } catch (e) {
       const kind = e instanceof LeadError ? e.kind : 'unknown'
       // A puzzle is single-use and short-lived: ask for a fresh tick.

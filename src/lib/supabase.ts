@@ -21,11 +21,11 @@ export class RpcError extends Error {
 }
 
 /**
- * Calls one of the three database functions the anon key is allowed to use
+ * Calls one of the four database functions the anon key is allowed to use
  * (see supabase/schema.sql). Tables are not reachable from the browser at all.
  */
 export async function supabaseRpc<T = unknown>(
-  fn: 'get_challenge' | 'submit_lead' | 'log_event',
+  fn: 'get_challenge' | 'submit_lead' | 'confirm_lead' | 'log_event',
   args: Record<string, unknown>,
   keepalive = false,
 ): Promise<T> {

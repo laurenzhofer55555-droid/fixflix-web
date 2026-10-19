@@ -6,12 +6,15 @@ export default function Success() {
   const { t } = useTranslation()
   const location = useLocation()
   const role: 'seeker' | 'helper' = location.state?.role === 'helper' ? 'helper' : 'seeker'
+  // A confirmation mail is on its way: the sign-up only counts after the click.
+  const confirm = location.state?.confirm === true
 
   return (
     <div className="mx-auto flex max-w-xl flex-col items-center px-4 py-16 text-center">
       <BeaverMascot className="h-40 w-40" />
-      <h1 className="mt-6 text-3xl font-extrabold">{t('success.title')}</h1>
-      <p className="mt-3 text-lg text-wood">{t(`success.${role}Text`)}</p>
+      <h1 className="mt-6 text-3xl font-extrabold">{t(confirm ? 'success.confirmTitle' : 'success.title')}</h1>
+      <p className="mt-3 text-lg text-wood">{t(confirm ? 'success.confirmText' : `success.${role}Text`)}</p>
+      {confirm && <p className="mt-3 text-sm text-wood/70">{t('success.confirmHint')}</p>}
       <Link
         to="/"
         className="mt-8 rounded-full bg-brand px-8 py-3 font-semibold text-white shadow transition-colors hover:bg-brand-dark"

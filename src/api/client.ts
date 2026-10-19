@@ -61,12 +61,17 @@ export async function fetchChallenge(): Promise<PowChallenge> {
   }
 }
 
-export async function createLead(payload: CreateLeadPayload): Promise<void> {
+export interface CreateLeadResult {
+  /** True when a confirmation mail went out and the sign-up only counts after the click. */
+  confirm: boolean
+}
+
+export async function createLead(payload: CreateLeadPayload): Promise<CreateLeadResult> {
   // Static hosting (GitHub Pages) has no backend: leads go through a guarded
   // database function. Without Supabase config (local dev) the ASP.NET API takes them.
   if (supabaseConfig()) {
     try {
-      await supabaseRpc('submit_lead', {
+      const result = await supabaseRpc<{ confirm?: unknown } | null>('submit_lead', {
         p_role: payload.role,
         p_email: payload.email.trim().toLowerCase(),
         p_postal_code: payload.postalCode,
@@ -78,10 +83,10 @@ export async function createLead(payload: CreateLeadPayload): Promise<void> {
         p_source: getSource(),
         p_pow: payload.proof ?? null,
       })
+      return { confirm: result?.confirm === true }
     } catch (error) {
       throw toLeadError(error)
     }
-    return
   }
 
   const response = await fetch('/api/leads', {
@@ -102,5 +107,19 @@ export async function createLead(payload: CreateLeadPayload): Promise<void> {
 
   if (!response.ok) {
     throw new LeadError('unknown')
+  }
+  return { confirm: false }
+}
+
+export type ConfirmStatus = 'confirmed' | 'already_confirmed' | 'expired' | 'invalid'
+
+/** Redeems the link from the confirmation mail. Throws LeadError for limits and outages. */
+export async function confirmLead(token: string): Promise<ConfirmStatus> {
+  try {
+    const result = await supabaseRpc<{ status?: unknown } | null>('confirm_lead', { p_token: token })
+    const status = result?.status
+    return status === 'confirmed' || status === 'already_confirmed' || status === 'expired' ? status : 'invalid'
+  } catch (error) {
+    throw toLeadError(error)
   }
 }

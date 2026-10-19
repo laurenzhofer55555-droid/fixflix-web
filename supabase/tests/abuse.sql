@@ -15,6 +15,17 @@ exception when others then
   return sqlstate || ':' || sqlerrm;
 end $$;
 
+-- Like t.run, but returns the statement's result as text.
+create function t.val(q text) returns text language plpgsql as $$
+declare
+  r text;
+begin
+  execute q into r;
+  return r;
+exception when others then
+  return sqlstate || ':' || sqlerrm;
+end $$;
+
 create function t.check(name text, actual text, expected text) returns text language sql as $$
   select case when actual like expected then 'PASS  ' else 'FAIL  ' end || name
          || case when actual like expected then '' else '   got: ' || actual || '   expected: ' || expected end
@@ -183,7 +194,132 @@ select t.check('global daily ceiling holds (2 of 50 stored)', (select count(*)::
 select t.check('purge runs',            t.run('select private.purge()'), 'OK');
 select t.check('no raw IP stored anywhere', (select count(*)::text from private.counters where bucket ~ '\d+\.\d+\.\d+\.\d+'), '0');
 select t.check('overview readable by owner', (select signups_total::text from public.demand_overview), '13');
-select t.check('by_hour readable by owner',  (select sum(signups)::text from public.demand_by_hour), '13');
+select t.check('by_hour readable by owner',  (select sum(confirmed)::text from public.demand_by_hour), '13');
 select t.check('conversion readable by owner', (select landing_visits::text from public.demand_conversion), '8');
+
+\echo == 8. E-mail confirmation (double opt-in)
+select t.check('without a mail service sign-ups count at once', (select (confirmed_at is not null)::text from public.leads where email = 'anna.beispiel@posteo.de'), 'true');
+update private.config set value = 1000 where key = 'lead_per_ip_hour';
+update private.settings set value = 'brevo' where key = 'mail_provider';
+insert into vault.decrypted_secrets values ('mail_api_key', 'test-key');
+
+-- What the test needs from the recorded mails (the attacker never sees them).
+create function t.token(addr text) returns text language sql security definer as $$
+  select substring(body->>'textContent' from '#([0-9a-f]{64})') from net.sent
+   where body->'to'->0->>'email' = addr order by id desc limit 1
+$$;
+create function t.mails(addr text) returns bigint language sql security definer as $$
+  select count(*) from net.sent where body->'to'->0->>'email' = addr
+$$;
+
+set role anon;
+select t.ip('10.0.1.1');
+select t.check('anon cannot call the mailer', t.run($$select private.send_confirmation('x@posteo.de', 'de', repeat('a', 64))$$), '42501:%');
+select t.check('anon cannot read the mail key', t.run('select private.mail_api_key()'), '42501:%');
+select t.check('anon cannot read the vault', t.run('select * from vault.decrypted_secrets'), '42501:%');
+select t.check('anon cannot change settings', t.run($$update private.settings set value = 'x'$$), '42501:%');
+select t.check('sign-up now asks for confirmation', t.val(t.lead('m1@posteo.de')), '{"ok": true, "confirm": true}');
+reset role;
+select t.check('pending sign-up does not count yet', (select signups_total || '/' || awaiting_confirmation from public.demand_overview), '13/1');
+select t.check('one mail to the right address', (select count(*) || ' ' || max(body->'to'->0->>'email') from net.sent), '1 m1@posteo.de');
+select t.check('mail goes to Brevo with the vault key', (select url || ' ' || (headers->>'api-key') from net.sent), 'https://api.brevo.com/v3/smtp/email test-key');
+select t.check('mail links to the confirm page', (select ((body->>'textContent') ~ 'https://fixflix\.space/bestaetigen#[0-9a-f]{64}')::text from net.sent), 'true');
+select t.check('only a hash of the link is stored', (select (confirm_token_hash <> t.token('m1@posteo.de'))::text from public.leads where email = 'm1@posteo.de'), 'true');
+
+set role anon;
+select t.ip('10.0.1.2');
+select t.check('malformed link',        t.val($$select public.confirm_lead('abc')$$), '{"status": "invalid"}');
+select t.check('sql in link',           t.val($$select public.confirm_lead($q$x' or '1'='1$q$)$$), '{"status": "invalid"}');
+select t.check('null link',             t.val('select public.confirm_lead(null)'), '{"status": "invalid"}');
+select t.check('guessed link',          t.val(format('select public.confirm_lead(%L)', repeat('a', 64))), '{"status": "invalid"}');
+select t.check('real link confirms',    t.val(format('select public.confirm_lead(%L)', t.token('m1@posteo.de'))), '{"status": "confirmed"}');
+select t.check('second click harmless', t.val(format('select public.confirm_lead(%L)', t.token('m1@posteo.de'))), '{"status": "already_confirmed"}');
+reset role;
+select t.check('confirmed sign-up counts', (select signups_total || '/' || awaiting_confirmation from public.demand_overview), '14/0');
+
+set role anon;
+select t.ip('10.0.1.3');
+select t.check('confirmed address signs up again: same answer', t.val(t.lead('m1@posteo.de')), '{"ok": true, "confirm": true}');
+select t.check('… but no new mail', t.mails('m1@posteo.de')::text, '1');
+select t.check('pending sign-up', t.run(t.lead('m2@posteo.de')), 'OK');
+reset role;
+create table t.old_token as select t.token('m2@posteo.de') as token;
+grant select on t.old_token to anon;
+set role anon;
+select t.check('pending sign-up repeated with new answers', t.run(replace(t.lead('m2@posteo.de'), '''10115''', '''80331''')), 'OK');
+select t.check('… sends a fresh link', t.mails('m2@posteo.de')::text, '2');
+select t.check('… old link stops working', t.val('select public.confirm_lead((select token from t.old_token))'), '{"status": "invalid"}');
+select t.check('… new link works', t.val(format('select public.confirm_lead(%L)', t.token('m2@posteo.de'))), '{"status": "confirmed"}');
+reset role;
+select t.check('… with the newer answers', (select postal_code from public.leads where email = 'm2@posteo.de'), '80331');
+
+set role anon;
+select t.ip('10.0.1.4');
+select t.check('6 sign-ups for one address', (select string_agg(r, ',') from (select t.run(t.lead('victim@posteo.de')) as r from generate_series(1, 6)) x), 'OK,OK,OK,OK,OK,OK');
+select t.check('hostile description', t.run(replace(t.lead('m5@posteo.de'), 'p_description => null', $$p_description => '<a href="http://evil.example">win</a>'$$)), 'OK');
+reset role;
+select t.check('6 sign-ups for one address send only 3 mails', t.mails('victim@posteo.de')::text, '3');
+select t.check('no address stored in the counters', (select count(*)::text from private.counters where bucket like '%@%'), '0');
+select t.check('visitor text never reaches a mail', (select count(*)::text from net.sent where body::text like '%evil%'), '0');
+
+update public.leads set confirm_sent_at = now() - interval '8 days' where email = 'm5@posteo.de';
+set role anon;
+select t.check('link older than 7 days', t.val(format('select public.confirm_lead(%L)', t.token('m5@posteo.de'))), '{"status": "expired"}');
+reset role;
+insert into public.leads (created_at, role, email, postal_code, categories, wants_app, confirmed_at)
+values (now() - interval '25 months', 'seeker', 'old@posteo.de', '10115', '{repair}', true, now() - interval '25 months');
+select t.check('purge runs', t.run('select private.purge()'), 'OK');
+select t.check('purge drops expired unconfirmed sign-ups', (select count(*)::text from public.leads where email = 'm5@posteo.de'), '0');
+select t.check('purge drops sign-ups older than 24 months', (select count(*)::text from public.leads where email = 'old@posteo.de'), '0');
+select t.check('purge keeps fresh pending sign-ups', (select count(*)::text from public.leads where email = 'victim@posteo.de'), '1');
+
+update private.config set value = 3 where key = 'confirm_per_ip_hour';
+set role anon;
+select t.ip('10.0.1.5');
+select t.check('link guesses 1-3', t.run($$select public.confirm_lead('x')$$) || t.run($$select public.confirm_lead('x')$$) || t.run($$select public.confirm_lead('x')$$), 'OKOKOK');
+select t.check('4th link guess blocked', t.run($$select public.confirm_lead('x')$$), 'PT429:rate_limited');
+reset role;
+update private.config set value = 30 where key = 'confirm_per_ip_hour';
+
+update private.settings set value = 'resend' where key = 'mail_provider';
+set role anon;
+select t.ip('10.0.1.6');
+select t.check('resend: sign-up in English', t.run(replace(t.lead('m7@posteo.de'), $$p_locale => 'de'$$, $$p_locale => 'en'$$)), 'OK');
+reset role;
+select t.check('resend: API, key and English mail', (select url || ' ' || (headers->>'Authorization') || ' ' || (body->>'subject') from net.sent where body->'to'->>0 = 'm7@posteo.de'), 'https://api.resend.com/emails Bearer test-key Please confirm your FixFlix sign-up');
+
+delete from vault.decrypted_secrets;
+set role anon;
+select t.ip('10.0.1.7');
+select t.check('without the key sign-ups count at once again', t.val(t.lead('m8@posteo.de')), '{"ok": true, "confirm": false}');
+reset role;
+update private.settings set value = '' where key = 'mail_provider';
+
+\echo == 9. IPv6 networks and daily counters
+update private.config set value = 1 where key = 'lead_per_ip_hour';
+set role anon;
+select t.ip('2001:db8:1:2::1');
+select t.check('IPv6 sign-up', t.run(t.lead('v1@posteo.de')), 'OK');
+select t.ip('2001:db8:1:2:ffff:ffff:ffff:ffff');
+select t.check('same /64 network counts as one connection', t.run(t.lead('v2@posteo.de')), 'PT429:rate_limited');
+select t.ip('2001:db8:1:3::1');
+select t.check('neighbouring /64 is another connection', t.run(t.lead('v3@posteo.de')), 'OK');
+select t.ip('not-an-ip');
+select t.check('garbage address header', t.run(t.lead('v4@posteo.de')), 'OK');
+select t.ip('also garbage');
+select t.check('all garbage shares one bucket', t.run(t.lead('v5@posteo.de')), 'PT429:rate_limited');
+reset role;
+update private.config set value = 5 where key = 'lead_per_ip_hour';
+update private.config set value = 3 where key = 'event_per_ip_day';
+update private.config set value = 20000 where key = 'event_global_day';
+set role anon;
+select t.ip('10.0.2.1');
+select public.log_event('pageview', '/bestaetigen', 'de', 'dayflood') from generate_series(1, 10);
+reset role;
+select t.check('daily cap per connection (3 of 10 stored)', (select count(*)::text from public.events where source = 'dayflood'), '3');
+select t.check('limit_hits shows the fired limits', (select string_agg(distinct limit_name, ', ' order by limit_name) from public.limit_hits where limit_name in ('mails per address', 'page counters per connection and day')), 'mails per address, page counters per connection and day');
+set role anon;
+select t.check('anon cannot read limit_hits', t.run('select * from public.limit_hits'), '42501:%');
+reset role;
 
 drop schema t cascade;

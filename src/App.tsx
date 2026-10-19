@@ -8,6 +8,7 @@ import Landing from './pages/Landing'
 import SeekerFunnel from './pages/SeekerFunnel'
 import HelperFunnel from './pages/HelperFunnel'
 import Success from './pages/Success'
+import Confirm from './pages/Confirm'
 import Impressum from './pages/Impressum'
 import Datenschutz from './pages/Datenschutz'
 
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="/finden" element={<SeekerFunnel />} />
           <Route path="/helfen" element={<HelperFunnel />} />
           <Route path="/erfolg" element={<Success />} />
+          <Route path="/bestaetigen" element={<Confirm />} />
           <Route path="/impressum" element={<Impressum />} />
           <Route path="/datenschutz" element={<Datenschutz />} />
         </Routes>

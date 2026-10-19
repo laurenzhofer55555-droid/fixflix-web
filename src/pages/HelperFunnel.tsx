@@ -66,7 +66,7 @@ export default function HelperFunnel() {
     setBusy(true)
     setError(null)
     try {
-      await createLead({
+      const { confirm } = await createLead({
         role: 'helper',
         email,
         postalCode: plz,
@@ -78,7 +78,7 @@ export default function HelperFunnel() {
         proof: guard.proof,
       })
       track('waitlist_joined_helper', { wants_app: wantsApp! })
-      navigate('/erfolg', { state: { role: 'helper' } })
+      navigate('/erfolg', { state: { role: 'helper', confirm } })
     } catch (e) {
       const kind = e instanceof LeadError ? e.kind : 'unknown'
       // A puzzle is single-use and short-lived: ask for a fresh tick.

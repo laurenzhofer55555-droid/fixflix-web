@@ -91,6 +91,18 @@ describe('"I am not a robot" check', () => {
     expect(await screen.findByText('Du bist auf der Liste!')).toBeInTheDocument()
   })
 
+  it('asks to click the mail link when the database sent a confirmation mail', async () => {
+    replies.submit_lead = ok({ ok: true, confirm: true })
+    const user = await reachWaitlistStep()
+    await user.click(robotBox())
+    await screen.findByRole('checkbox', { name: 'Bestätigt, danke!' })
+    await user.click(submitButton())
+
+    expect(await screen.findByRole('heading', { name: 'Fast geschafft!' })).toBeInTheDocument()
+    expect(screen.getByText(/Bitte klick auf den Link/)).toBeInTheDocument()
+    expect(screen.queryByText('Du bist auf der Liste!')).not.toBeInTheDocument()
+  })
+
   it('explains a rate limit and keeps the confirmation', async () => {
     replies.submit_lead = refusal(429, 'rate_limited')
     const user = await reachWaitlistStep()
