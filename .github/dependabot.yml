@@ -1,5 +1,5 @@
 # Keeps the pinned workflow actions and npm packages current: Dependabot opens
-# a pull request once a month, and the deploy workflow runs the tests on it.
+# a pull request once a month, and the Test workflow checks it before merging.
 version: 2
 updates:
   - package-ecosystem: github-actions
